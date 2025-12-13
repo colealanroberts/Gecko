@@ -26,6 +26,9 @@ extension DriverResponse {
         /// The version of the driver.
         let version: String
 
+        /// The details url, opening the default web browser.
+        let detailsURL: String
+
         enum CodingKeys: String, CodingKey {
             case downloadInfo
         }
@@ -33,6 +36,7 @@ extension DriverResponse {
         enum DownloadInfoKeys: String, CodingKey {
             case url = "DownloadURL"
             case version = "Version"
+            case detailsURL = "DetailsURL"
         }
 
         init(from decoder: any Decoder) throws {
@@ -41,6 +45,7 @@ extension DriverResponse {
 
             self.url = try info.decode(URL.self, forKey: .url)
             self.version = try info.decode(String.self, forKey: .version)
+            self.detailsURL = try info.decode(String.self, forKey: .detailsURL)
         }
     }
 }

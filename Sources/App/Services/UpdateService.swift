@@ -54,6 +54,8 @@ final class UpdateService: UpdateServicing {
             return nil
         }
 
+        print(url)
+
         let response: DriverResponse = try await httpClient.request(url: url)
         let download = response.downloads[0]
 

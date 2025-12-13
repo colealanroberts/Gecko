@@ -28,7 +28,7 @@ extension UI {
         init(
             title: String,
             subtitle: String? = nil,
-            cancel: UI.Action
+            actions: [UI.Action]
         ) {
             let builder = AppNotificationBuilder()
             let id = Foundation.UUID()
@@ -39,9 +39,13 @@ extension UI {
                 .attachStatus()
                 .attachValueString()
 
-            let button = AppNotificationButton.make(cancel.title)
-                .buttonStyle(cancel.style)
-                .argument("actionHandler", cancel.identifier)
+            actions.forEach {
+                let button = AppNotificationButton.make($0.title)
+                    .buttonStyle($0.style)
+                    .argument("actionHandler", $0.identifier)
+                    
+                builder.button(button)
+            }
             
             _ = try! builder
                 .text(title)
@@ -53,12 +57,11 @@ extension UI {
                     return $0
                 }
                 .addProgressBar(bar)
-                .addButton(button)
                 .setTag(tag)
 
             self.id = id
             self.title = title
-            self.actions = [cancel]
+            self.actions = actions
             self.builder = builder
             self.tag = tag
         }

@@ -117,9 +117,11 @@ extension GeckoApp {
             let progress = UI.ProgressNotification(
                 title: "Downloading driver",
                 subtitle: "Version \(download.version)",
-                cancel: .default("Cancel") {
-                    onCancel(taskIdentifier)
-                }
+                actions: [
+                    .default("Cancel") {
+                        onCancel(taskIdentifier)
+                    }
+                ]
             )
 
             notificationPresenter.present(progress)
