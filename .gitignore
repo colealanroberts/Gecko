@@ -1,0 +1,5 @@
+.build/
+.claude/
+.vscode/
+nul
+Gecko.code-workspace
