@@ -23,13 +23,13 @@ extension UI {
             subtitle: String?,
             actions: [UI.Action] = []
         ) {
-            let builder = try! AppNotificationBuilder()
+            let builder = AppNotificationBuilder.make()
 
-            _ = try! builder
-                .addText(title)
+            builder
+                .text(title)
                 .transform {
                     if let subtitle {
-                        return try! $0.addText(subtitle)
+                        return $0.text(subtitle)
                     }
                     return $0
                 }
@@ -37,9 +37,9 @@ extension UI {
             let id = Foundation.UUID()
 
             actions.forEach {
-                let button = try! AppNotificationButton($0.title)
-                    .setButtonStyle($0.style)
-                    .addArgument("actionHandler", $0.identifier)
+                let button = AppNotificationButton.make($0.title)
+                    .buttonStyle($0.style)
+                    .argument("actionHandler", $0.identifier)
 
                 _ = try! builder.addButton(button)
             }

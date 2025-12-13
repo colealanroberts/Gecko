@@ -19,23 +19,42 @@ final class NotificationPresenter: NotificationPresenting {
 
     // MARK: - Private Properties
 
+    /// The concrete Windows notification manager.
     private lazy var manager = AppNotificationManager.default!
-    private var notifications: [Foundation.UUID: GeckoNotification] = [:]
+    
+    /// A dictionary of identifiers and associated closures to execute - keyed by identifier (`Action.identifier`).
+    private var actionHandlers: [String: () -> Void] = [:]
 
     // MARK: - Init
 
     init() {
-        manager.notificationInvoked.addHandler { [weak self] _, eventArgs in
+        registerNotificationHandler()
+    }
+
+    // MARK: - Public Methods
+
+    func present(_ notification: GeckoNotification) {
+        manager.present(notification)
+
+        if let actionable = notification as? GeckoNotificationActionable {
+            actionable.actions.forEach {
+                actionHandlers[$0.identifier] = $0.onClick 
+            }
+        }
+    }
+
+    func update(data: AppNotificationProgressData, in notification: UI.ProgressNotification) {
+       manager.update(data: data, in: notification)
+    }
+
+    // MARK: - Private Methods
+
+    private func registerNotificationHandler() {
+        manager.notificationInvoked.addHandler {  [weak self] _, eventArgs in
             guard let self, let id = eventArgs?.arguments["actionHandler"] else { return }
 
-            for notification in notifications.values {
-                if let actionable = notification as? GeckoNotificationActionable,
-                   let action = actionable.actions.first(where: { $0.identifier == id }) {
-                    action.onClick()
-                    // When invoked, we'll remove our notification from our store.
-                    self.notifications[actionable.id] = nil
-                    break
-                }
+            if let action = actionHandlers[id].take() {
+                action()
             }
         }
 
@@ -44,16 +63,5 @@ final class NotificationPresenter: NotificationPresenting {
         } catch {
             debugPrint(error)
         }
-    }
-
-    // MARK: - Public Methods
-
-    func present(_ notification: GeckoNotification) {
-        manager.present(notification)
-        notifications[notification.id] = notification
-    }
-
-    func update(data: AppNotificationProgressData, in notification: UI.ProgressNotification) {
-       manager.update(data: data, in: notification)
     }
 }

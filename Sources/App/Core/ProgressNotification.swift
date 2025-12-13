@@ -34,17 +34,17 @@ extension UI {
             let id = Foundation.UUID()
             let tag = id.uuidString
 
-            let bar = try! AppNotificationProgressBar()
-                .bindValue()
-                .bindStatus()
-                .bindValueStringOverride()
+            let bar = AppNotificationProgressBar.make()
+                .attachValue()
+                .attachStatus()
+                .attachValueString()
 
-            let button = try! AppNotificationButton(cancel.title)
-                .setButtonStyle(cancel.style)
-                .addArgument("actionHandler", cancel.identifier)
+            let button = AppNotificationButton.make(cancel.title)
+                .buttonStyle(cancel.style)
+                .argument("actionHandler", cancel.identifier)
             
             _ = try! builder
-                .addText(title)
+                .text(title)
                 .transform {
                     if let subtitle {
                         return try! $0.addText(subtitle)
@@ -66,27 +66,29 @@ extension UI {
         // MARK: - Public Methods
 
         func update(
-            progress: Double
+            snapshot: DownloadSnapshot
         ) -> AppNotificationProgressData? {
-            var sequence = UInt32(progress * 100.0)
-
-            // Round to two decimal places.
-            let percent = round(progress * 100) / 100
-
-            // Only update if we have a unique sequence.
+            var sequence = UInt32(snapshot.progress * 100.0)
+            
             guard sequence != lastSequence else {
                 return nil
             }
 
             lastSequence = sequence
 
-            let bar = AppNotificationProgressData(sequence)
-                bar.title = title
-                bar.value = percent
-                bar.valueStringOverride = "\(Int(progress * 100))%"
-                bar.status = "Downloading..."
+            let data = AppNotificationProgressData(sequence)
+                data.title = title
+                data.value = snapshot.progress
 
-            return bar
+                if let percentage = snapshot.percentage {
+                    data.valueStringOverride = "\(percentage)%"
+                }
+
+                let written = ByteCountFormatter.string(fromByteCount: snapshot.bytesWritten, countStyle: .file)
+                let total = ByteCountFormatter.string(fromByteCount: snapshot.totalBytes, countStyle: .file)
+                
+                data.status = "\(written)/\(total)"
+            return data
         }
     }
 }

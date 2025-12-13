@@ -7,8 +7,8 @@ protocol HTTPClient {
     /// Performs a request using the supplied `URLRequest` and returns `<T>`.
     func request<T: Decodable>(request: URLRequest) async throws -> T
 
-    /// Attempts to download a file from the supplied url - calling the `onProgress` closure as the download progresses.
-    func download(url: URL, onChange: @escaping ((CoreHTTPClient.DownloadTaskDelegate.DownloadTask) -> Void)) async throws -> URL
+    /// Attempts to download a file from the supplied url - calling the `onChange` closure as the download progresses.
+    func download(url: URL, onChange: @escaping ((DownloadSnapshot) -> Void)) async throws -> URL
 
     /// Cancels a download task with the specified identifier.
     func cancel(id: String)
@@ -37,7 +37,7 @@ final class CoreHTTPClient: HTTPClient {
         return try decoder.decode(T.self, from: data)
     }
 
-    func download(url: URL, onChange: @escaping ((DownloadTaskDelegate.DownloadTask) -> Void)) async throws -> URL {
+    func download(url: URL, onChange: @escaping ((DownloadSnapshot) -> Void)) async throws -> URL {
         downloadDelegate.onChange = onChange
 
         let session = URLSession(
@@ -61,14 +61,10 @@ final class CoreHTTPClient: HTTPClient {
 extension CoreHTTPClient {
     final class DownloadTaskDelegate: NSObject, URLSessionDownloadDelegate {
 
-        // MARK: - Typealiases
-
-        typealias DownloadTask = (taskIdentifier: String?, progress: Double)
-
         // MARK: - Public Properties
 
         /// Fired each time new data arrives - yielding a `DownloadTask`.
-        nonisolated(unsafe) var onChange: ((DownloadTask) -> Void)?
+        nonisolated(unsafe) var onChange: ((DownloadSnapshot) -> Void)?
 
         /// A dictionary containing in-flight download tasks.
         nonisolated(unsafe) private(set) var tasks: [String: URLSessionTask] = [:]
@@ -102,8 +98,13 @@ extension CoreHTTPClient {
             totalBytesWritten: Int64, 
             totalBytesExpectedToWrite: Int64
         ) {
-            let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
-            onChange?((downloadTask.taskDescription, progress))
+            let snapshot = DownloadSnapshot(
+                identifier: downloadTask.taskDescription, 
+                bytesWritten: totalBytesWritten, 
+                totalBytes: totalBytesExpectedToWrite
+            )
+
+            onChange?(snapshot)
         }
 
         func urlSession(

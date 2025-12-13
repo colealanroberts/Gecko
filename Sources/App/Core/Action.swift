@@ -4,13 +4,12 @@ import Foundation
 
 extension UI {
     struct Action {
-        /// A unique identifier for the button.
-        /// - Note: This is assigned automatically.
-        let id = Foundation.UUID()
+
+        // MARK: - Public Properties
 
         /// A unique identifier for handling clicks with Windows.
         /// - Note: This is derived from the `id`.
-        var identifier: String { "action-\(id.uuidString)" }
+        var identifier: String { "action-\(id)" }
 
         /// The style (`Style`) of the button.
         let style: Style
@@ -20,6 +19,12 @@ extension UI {
 
         /// The action to execute when the button is clicked.
         let onClick: () -> Void
+
+        // MARK: - Private Properties
+
+        /// A unique identifier for the button.
+        /// - Note: This is assigned automatically.
+        private let id = UUID().uuidString
     }
 }
 

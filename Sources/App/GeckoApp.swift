@@ -96,39 +96,43 @@ extension GeckoApp {
                 actions: [
                     .cancel,
                     .default("Download") { [weak self] in
-                        guard let self else { return }
-
-                        var taskIdentifier: String?
-
-                        let onCancel: (String?) -> Void = { [weak self] taskId in
-                            guard let taskId else { return }
-                            self?.httpClient.cancel(id: taskId)
-                        }
-
-                        let progress = UI.ProgressNotification(
-                            title: "Downloading driver",
-                            subtitle: "Version \(download.version)",
-                            cancel: .default("Cancel") {
-                                onCancel(taskIdentifier)
-                            }
-                        )
-
-                        notificationPresenter.present(progress)
-
-                        startDownload(
-                            url: download.url, 
-                            notification: progress,
-                            onTaskIdentifier: { taskId in
-                                if taskIdentifier != taskId {
-                                    taskIdentifier = taskId
-                                }
-                            }
-                        )
+                        self?.onDownloadClicked(download: download)
                     }
                 ]
             )
 
             notificationPresenter.present(notification)
+        }
+
+        private func onDownloadClicked(
+            download: DriverResponse.Download
+            ) {
+            var taskIdentifier: String?
+
+            let onCancel: (String?) -> Void = { [weak self] taskId in
+                guard let taskId else { return }
+                self?.httpClient.cancel(id: taskId)
+            }
+
+            let progress = UI.ProgressNotification(
+                title: "Downloading driver",
+                subtitle: "Version \(download.version)",
+                cancel: .default("Cancel") {
+                    onCancel(taskIdentifier)
+                }
+            )
+
+            notificationPresenter.present(progress)
+
+            startDownload(
+                url: download.url, 
+                notification: progress,
+                onTaskIdentifier: { taskId in
+                    if taskIdentifier != taskId {
+                        taskIdentifier = taskId
+                    }
+                }
+            )
         }
 
         private func startDownload(
@@ -140,10 +144,10 @@ extension GeckoApp {
                 do {
                     let fileURL = try await self.httpClient.download(
                         url: url, 
-                        onChange: { result in
-                            onTaskIdentifier(result.taskIdentifier)
+                        onChange: { snapshot in
+                            onTaskIdentifier(snapshot.identifier)
 
-                            if let update = notification.update(progress: result.progress) {
+                            if let update = notification.update(snapshot: snapshot) {
                                 self.notificationPresenter.update(
                                     data: update,
                                     in: notification

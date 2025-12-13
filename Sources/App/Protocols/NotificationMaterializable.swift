@@ -3,7 +3,7 @@ import WinAppSDK
 
 // MARK: - NotificationMaterializable
 
-protocol NotificationMaterializable {
+protocol NotificationMaterializable: NotificationEphemeral {
     /// A concrete builder (`AppNotificationBuilder`).
     var builder: AppNotificationBuilder { get }
 
@@ -15,6 +15,9 @@ protocol NotificationMaterializable {
 
 extension NotificationMaterializable {
     func materialize() -> AppNotification {
-        try! builder.buildNotification()
+        let notification = try! builder.buildNotification()!
+        notification.expiresOnReboot = expiresOnReboot
+
+        return notification
     }
 }

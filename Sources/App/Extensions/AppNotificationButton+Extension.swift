@@ -4,8 +4,13 @@ import WinAppSDK
 // MARK: - AppNotificationButton+UI.Action.Style
 
 extension AppNotificationButton {
+
+    static func make(_ title: String) -> AppNotificationButton {
+        try! AppNotificationButton(title)
+    }
+
     @discardableResult
-    func setButtonStyle(_ style: UI.Action.Style) throws -> AppNotificationButton {
+    func buttonStyle(_ style: UI.Action.Style) -> AppNotificationButton {
         let buttonStyle: AppNotificationButtonStyle
 
         switch style {
@@ -17,6 +22,10 @@ extension AppNotificationButton {
             buttonStyle = .critical
         }
 
-        return try setButtonStyle(buttonStyle)
+        return try! setButtonStyle(buttonStyle)
+    }
+    
+    func argument(_ a: String, _ b: String) -> AppNotificationButton {
+        try! addArgument(a, b)
     }
 }
