@@ -54,6 +54,11 @@ final class ConfigurationProvider: ConfigurationProviding {
         do {
             let data = try Data(contentsOf: url)
             let config = try decoder.decode(Configuration.self, from: data)
+
+            if config.containsIncompletes {
+                writeConfigIfNecessary(at: url)
+            }
+
             return config
         } catch {
             print(error.localizedDescription)
