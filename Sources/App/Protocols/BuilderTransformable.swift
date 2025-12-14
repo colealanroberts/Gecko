@@ -2,20 +2,10 @@ import Foundation
 import WinAppSDK
 import WindowsFoundation
 
-// MARK: - BuilderTransformable
+// MARK: - Transformable
 
-protocol BuilderTransformable {
-    /// A function that allows _inline_ transformation of a `Builder` type, 
+protocol Transformable {
+    /// A function that allows _inline_ transformation of a type, 
     /// enabling inline chaining.
     func transform(_ transformer: (Self) -> Self) -> Self
-}
-
-// MARK: - AppNotificationBuilder+BuilderTransformable
-
-extension AppNotificationBuilder: BuilderTransformable {
-    func transform(
-        _ transformer: (AppNotificationBuilder) -> AppNotificationBuilder
-    ) -> AppNotificationBuilder {
-        transformer(self)
-    }
 }

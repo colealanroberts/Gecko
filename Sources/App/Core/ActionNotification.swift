@@ -24,24 +24,23 @@ extension UI {
             actions: [UI.Action] = []
         ) {
             let builder = AppNotificationBuilder.make()
+            let id = Foundation.UUID()
 
             builder
-                .text(title)
+                .add(title)
                 .transform {
                     if let subtitle {
-                        return $0.text(subtitle)
+                        return $0.add(subtitle)
                     }
                     return $0
                 }
 
-            let id = Foundation.UUID()
-
             actions.forEach {
                 let button = AppNotificationButton.make($0.title)
-                    .buttonStyle($0.style)
+                    .style($0.style)
                     .argument("actionHandler", $0.identifier)
 
-                _ = try! builder.addButton(button)
+                builder.add(button)
             }
 
             self.id = id

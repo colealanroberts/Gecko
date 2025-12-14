@@ -41,23 +41,23 @@ extension UI {
 
             actions.forEach {
                 let button = AppNotificationButton.make($0.title)
-                    .buttonStyle($0.style)
+                    .style($0.style)
                     .argument("actionHandler", $0.identifier)
                     
-                builder.button(button)
+                builder.add(button)
             }
             
-            _ = try! builder
-                .text(title)
+            builder
+                .add(title)
                 .transform {
                     if let subtitle {
-                        return try! $0.addText(subtitle)
+                        return $0.add(subtitle)
                     }
 
                     return $0
                 }
-                .addProgressBar(bar)
-                .setTag(tag)
+                .add(bar)
+                .set(tag)
 
             self.id = id
             self.title = title
@@ -71,7 +71,7 @@ extension UI {
         func update(
             snapshot: DownloadSnapshot
         ) -> AppNotificationProgressData? {
-            var sequence = UInt32(snapshot.progress * 100.0)
+            let sequence = UInt32(snapshot.progress * 100.0)
             
             guard sequence != lastSequence else {
                 return nil

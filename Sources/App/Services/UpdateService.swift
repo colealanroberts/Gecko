@@ -54,13 +54,18 @@ final class UpdateService: UpdateServicing {
             return nil
         }
 
-        print(url)
-
         let response: DriverResponse = try await httpClient.request(url: url)
         let download = response.downloads[0]
 
-        let local = Version(gpu.formattedVersion)
-        let remote = Version(download.version)
+        guard let local = Version(gpu.formattedVersion) else {
+            assertionFailure("Unable to construct a local version.")
+            return nil
+        }
+        
+        guard let remote = Version(download.version) else {
+            assertionFailure("Unable to construct a remote version.")
+            return nil
+        }
 
         if remote <= local {
             return download

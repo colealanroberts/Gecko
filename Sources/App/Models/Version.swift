@@ -15,14 +15,17 @@ struct Version: Comparable {
         self.minor = minor
     }
 
-    init(
+    init?(
         _ string: String 
     ) {
         let components = string
             .split(separator: ".")
             .compactMap { Int($0) }
     
-        guard components.count == 2 else { fatalError() }
+        guard components.count == 2 else {
+            assertionFailure("Expected two components, got \(components.count)")
+            return nil
+        }
 
         self.major = components[0]
         self.minor = components[1]

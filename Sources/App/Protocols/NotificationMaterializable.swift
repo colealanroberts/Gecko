@@ -15,7 +15,7 @@ protocol NotificationMaterializable: NotificationEphemeral {
 
 extension NotificationMaterializable {
     func materialize() -> AppNotification {
-        let notification = try! builder.buildNotification()!
+        let notification = builder.build()
         notification.expiresOnReboot = expiresOnReboot
 
         return notification

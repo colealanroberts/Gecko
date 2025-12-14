@@ -11,7 +11,6 @@ public final class GeckoApp: Application {
     // MARK: - Private Properties
 
     private var window: Window?
-    private let httpClient: HTTPClient
     private let viewModel: ViewModel
 
     // MARK: - Init
@@ -35,8 +34,6 @@ public final class GeckoApp: Application {
             updateService: updateService,
             notificationPresenter: notificationPresenter
         )
-
-        self.httpClient = httpClient
         
         super.init()
     }
