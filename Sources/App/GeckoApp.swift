@@ -15,6 +15,9 @@ public final class GeckoApp: Application {
     // MARK: - Init
 
     override init() {
+        let configurationProvider = ConfigurationProvider()
+        let config = configurationProvider.load()
+
         let httpClient = CoreHTTPClient()
 
         let gpuLookupService = GPULookupService(
