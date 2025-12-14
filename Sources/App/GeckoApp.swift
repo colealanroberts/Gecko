@@ -10,7 +10,6 @@ public final class GeckoApp: Application {
 
     // MARK: - Private Properties
 
-    private var window: Window?
     private let viewModel: ViewModel
 
     // MARK: - Init
@@ -154,8 +153,6 @@ extension GeckoApp {
                             }
                         }
                     )
-
-                    print(fileURL)
                 } catch {
 
                 }

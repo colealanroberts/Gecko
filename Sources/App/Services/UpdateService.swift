@@ -41,12 +41,22 @@ final class UpdateService: UpdateServicing {
 
         let (gpuID, osID) = try await gpuLookupService.identifiers(gpu: gpu, os: os)
 
+        guard let gpuID else {
+            assertionFailure("Unable to identify gpu id.")
+            return nil
+        }
+
+        guard let osID else {
+            assertionFailure("Unable to identify os id.")
+            return nil
+        }
+
         var components = URLComponents(string: "https://gfwsl.geforce.com/services_toolkit/services/com/nvidia/services/AjaxDriverService.php")
 
         components?.queryItems = [
             URLQueryItem(name: "func", value: "DriverManualLookup"),
-            URLQueryItem(name: "pfid", value: gpuID!),
-            URLQueryItem(name: "osID", value: osID!),
+            URLQueryItem(name: "pfid", value: gpuID),
+            URLQueryItem(name: "osID", value: osID),
             URLQueryItem(name: "dch", value: "1")
         ]
 
@@ -55,7 +65,11 @@ final class UpdateService: UpdateServicing {
         }
 
         let response: DriverResponse = try await httpClient.request(url: url)
-        let download = response.downloads[0]
+
+        guard let download = response.downloads.first else {
+            assertionFailure("Request succeeded, but download array was empty.")
+            return nil
+        }
 
         guard let local = Version(gpu.formattedVersion) else {
             assertionFailure("Unable to construct a local version.")
