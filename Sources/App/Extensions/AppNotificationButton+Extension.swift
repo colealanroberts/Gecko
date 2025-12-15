@@ -1,4 +1,3 @@
-import Foundation
 import WinAppSDK
 
 // MARK: - AppNotificationButton+UI.Action.Style

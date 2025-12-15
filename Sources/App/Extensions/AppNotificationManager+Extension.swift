@@ -1,7 +1,4 @@
-import Foundation
-import CWinRT
 import WinAppSDK
-import WindowsFoundation
 
 extension AppNotificationManager {
     func present(_ notification: GeckoNotification) {

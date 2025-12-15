@@ -1,5 +1,3 @@
-import Foundation
-import CWinRT
 import WinAppSDK
 import WindowsFoundation
 

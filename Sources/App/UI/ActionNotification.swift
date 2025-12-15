@@ -1,5 +1,4 @@
-import Foundation
-import CWinRT
+import FoundationEssentials
 import WinAppSDK
 import WindowsFoundation
 
@@ -12,7 +11,7 @@ extension UI {
 
         // MARK: - Public Properties
 
-        let id: Foundation.UUID
+        let id: FoundationEssentials.UUID
         let actions: [UI.Action]
         let builder: AppNotificationBuilder
 
@@ -24,7 +23,7 @@ extension UI {
             actions: [UI.Action] = []
         ) {
             let builder = AppNotificationBuilder.make()
-            let id = Foundation.UUID()
+            let id = FoundationEssentials.UUID()
 
             builder
                 .add(title)

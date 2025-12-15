@@ -1,6 +1,6 @@
-import Foundation
+import FoundationEssentials
 
 protocol NotificationIdentifiable {
     /// A unique identifier for the notification.
-    var id: Foundation.UUID { get }
+    var id: FoundationEssentials.UUID { get }
 }

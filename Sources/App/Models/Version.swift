@@ -1,5 +1,3 @@
-import FoundationEssentials
-
 struct Version: Comparable {
     /// The major version.
     let major: Int

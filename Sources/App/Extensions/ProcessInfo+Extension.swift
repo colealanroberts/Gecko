@@ -1,4 +1,4 @@
-import FoundationEssentials
+import Foundation
 
 extension ProcessInfo {
     static var systemRoot: String {

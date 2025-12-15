@@ -1,4 +1,4 @@
-import Foundation
+import FoundationEssentials
 
 // MARK: - UI.Action
 
@@ -24,7 +24,7 @@ extension UI {
 
         /// A unique identifier for the button.
         /// - Note: This is assigned automatically.
-        private let id = UUID().uuidString
+        private let id = FoundationEssentials.UUID().uuidString
     }
 }
 

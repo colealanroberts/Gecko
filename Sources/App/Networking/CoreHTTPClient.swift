@@ -83,7 +83,7 @@ extension CoreHTTPClient {
             try await withCheckedThrowingContinuation { continuation in
                 self.continuation = continuation
                 let task = session.downloadTask(with: url)
-                let description = UUID().uuidString
+                let description = Foundation.UUID().uuidString
                 task.taskDescription = description
                 tasks[description] = task
 

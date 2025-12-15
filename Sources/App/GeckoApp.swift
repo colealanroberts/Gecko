@@ -1,12 +1,10 @@
-import Foundation
-import CWinRT
+import FoundationEssentials
 import WinAppSDK
 import WindowsFoundation
-import WinUI
 
 @_spi(WinRTImplements) import WindowsFoundation
 
-public final class GeckoApp: Application {
+public final class GeckoApp {
 
     // MARK: - Private Properties
 
@@ -14,7 +12,7 @@ public final class GeckoApp: Application {
 
     // MARK: - Init
 
-    override init() {
+    init() {
         let configurationProvider = ConfigurationProvider()
         let config = configurationProvider.load()
 
@@ -36,13 +34,11 @@ public final class GeckoApp: Application {
             updateService: updateService,
             notificationPresenter: notificationPresenter
         )
-        
-        super.init()
     }
 
-    // MARK: - Public Methods
-
-    override public func onLaunched(_ args: WinUI.LaunchActivatedEventArgs?) throws {
+    // MARK:  - Public Methods
+    
+    func launch() {
         viewModel.prepare()
     }
 }

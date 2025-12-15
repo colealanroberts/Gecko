@@ -1,4 +1,3 @@
-import FoundationEssentials
 import WinSDK
 
 extension String {

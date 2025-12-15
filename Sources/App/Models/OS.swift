@@ -1,5 +1,3 @@
-import FoundationEssentials
-
 /// Represents versioning and bitness of the operating system.
 struct OS {
     /// The backing version.

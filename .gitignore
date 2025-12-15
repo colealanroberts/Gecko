@@ -1,5 +1,6 @@
 .build/
 .claude/
 .vscode/
+dist/
 nul
 Gecko.code-workspace

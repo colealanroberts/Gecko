@@ -1,5 +1,3 @@
-import FoundationEssentials
-
 /// Represents a slice of the current download at a given time.
 struct DownloadSnapshot {
     /// The identifier associated with this update.

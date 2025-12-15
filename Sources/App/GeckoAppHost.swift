@@ -1,13 +1,12 @@
 import CWinAppSDK
-import Foundation
 import WinSDK
-import WinUI
+import Dispatch
 
 // MARK: - GeckoAppHost
 
 @main
 enum GeckoAppHost {
-    public static func main() async throws {
+    public static func main() {
 
         defer {
             MddBootstrapShutdown()
@@ -22,8 +21,9 @@ enum GeckoAppHost {
             MddBootstrapInitializeOptions(MddBootstrapInitializeOptions_OnNoMatch_ShowUI.rawValue | MddBootstrapInitializeOptions_OnError_DebugBreak_IfDebuggerAttached.rawValue)
         )
 
-        try! Application.start { _ in
-            _ = GeckoApp()
-        }
+        let app = GeckoApp()
+        app.launch()
+
+        dispatchMain()
     }
 }

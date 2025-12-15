@@ -1,5 +1,3 @@
-import Foundation
-
 // MARK: - NotificationEphemeral
 
 /// A contract that specifies whether notifications are cleared on reboot.

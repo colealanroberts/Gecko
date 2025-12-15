@@ -1,4 +1,4 @@
-import Foundation
+import FoundationEssentials
 
 /// Allows user-configurable properties Gecko. 
 /// - Note: If necessary, a `config.json` file is written to disk with the 
@@ -17,6 +17,10 @@ struct Configuration: Codable {
     ///  - The value here is internally clamped to 5 minutes (`300`) and 1 week (`604800`) and the value you provide.
     ///  - Negative numbers are discarded - clamping to lower bound.
     let updateCheckInterval: Int
+
+    /// Whether Gecko should run on system boot.
+    /// - Note: The default value is `true`.
+    let shouldLaunchAtStartup: Bool
     
     /// Internal flag to track if any values were missing during decoding.
     /// - Note: This is *not* persisted to the configuration file.
@@ -28,6 +32,7 @@ struct Configuration: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let _isLoggingEnabled = try container.decodeIfPresent(Bool.self, forKey: .isLoggingEnabled)
         let _updateCheckInterval = try container.decodeIfPresent(Int.self, forKey: .updateCheckInterval)
+        let _shouldLaunchAtStartup = try container.decodeIfPresent(Bool.self, forKey: .shouldLaunchAtStartup)
 
         // We'll capture the default config, loading these values in place *if* the `config.json` file
         // is missing or incomplete.
@@ -36,15 +41,19 @@ struct Configuration: Codable {
 
         self.isLoggingEnabled = _isLoggingEnabled ?? initial.isLoggingEnabled
         self.updateCheckInterval = updateCheckInterval.clamped(from: .fiveMinutes, to: .oneWeek)
-        self.containsIncompletes = _isLoggingEnabled == nil || _updateCheckInterval == nil
+        self.shouldLaunchAtStartup = _shouldLaunchAtStartup ?? initial.shouldLaunchAtStartup
+
+        self.containsIncompletes = _isLoggingEnabled == nil || _updateCheckInterval == nil || _shouldLaunchAtStartup == nil
     }
 
     private init(
         isLoggingEnabled: Bool,
-        updateCheckInterval: Int
+        updateCheckInterval: Int,
+        shouldLaunchAtStartup: Bool
     ) {
         self.isLoggingEnabled = isLoggingEnabled
         self.updateCheckInterval = updateCheckInterval
+        self.shouldLaunchAtStartup = shouldLaunchAtStartup
     }
 
     /// MARK: - Utility 
@@ -52,7 +61,8 @@ struct Configuration: Codable {
     static var `default`: Self {
         .init(
             isLoggingEnabled: false,
-            updateCheckInterval: 43_200
+            updateCheckInterval: 43_200,
+            shouldLaunchAtStartup: true
         )
     }
 }
@@ -61,7 +71,7 @@ struct Configuration: Codable {
 
 private extension Configuration {
     enum CodingKeys: String, CodingKey {
-        case isLoggingEnabled, updateCheckInterval
+        case isLoggingEnabled, updateCheckInterval, shouldLaunchAtStartup
     }
 }
 
