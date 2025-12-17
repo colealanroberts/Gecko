@@ -22,8 +22,8 @@ Gecko stores its configuration in `%APPDATA%\Local\Gecko\config.json`. You can c
 **Example Configuration:**
 ```json
 {
-    "logLevel": 0, // None
-    "updateCheckInterval": 43200, // 12 hours
+    "logLevel": 0,
+    "updateCheckInterval": 43200,
     "shouldLaunchAtStartup": true
 }
 ```
@@ -46,7 +46,7 @@ If you would like to report a bug, discuss the current state of the code, submit
 
 ## Building from Source
 
-Requires https://www.swift.org/install/windows/ (5.9+):
+Requires [Swift for Windows](https://www.swift.org/install/windows/) (5.9+):
 
 ```
 git clone https://github.com/colealanroberts/Gecko.git
