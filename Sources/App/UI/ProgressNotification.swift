@@ -1,8 +1,5 @@
 import Foundation
 import WinAppSDK
-import WindowsFoundation
-
-@_spi(WinRTImplements) import WindowsFoundation
 
 // MARK: - UI.ActionNotification
 

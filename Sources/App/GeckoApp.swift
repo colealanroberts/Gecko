@@ -1,15 +1,6 @@
 import FoundationEssentials
 import WinAppSDK
 import WinSDK
-import WindowsFoundation
-
-// TODO:
-// - Cleanup download when cancelled or installed
-// - Launch installer
-// - App icon
-// - Package app?
-
-@_spi(WinRTImplements) import WindowsFoundation
 
 public final class GeckoApp {
 

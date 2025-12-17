@@ -1,5 +1,4 @@
 import WinAppSDK
-import WindowsFoundation
 
 // MARK: - NotificationPresenting
 
