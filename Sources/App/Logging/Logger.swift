@@ -170,14 +170,14 @@ private extension URL {
 extension LogMessage: CustomStringConvertible {
     var description: String {
         var desc = """
-        \(sessionIdentifier)
-        \(timestamp)
-        \(level)
-        \(value)
+        session: \(sessionIdentifier)
+        time: \(timestamp)
+        level: \(level)
+        value: \(value)
         """
 
         if let metadata {
-            desc += "\n\(metadata)"
+            desc += "metadata: \(metadata)"
         }
 
         return desc

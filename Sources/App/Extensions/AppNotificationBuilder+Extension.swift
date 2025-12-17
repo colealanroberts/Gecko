@@ -30,6 +30,11 @@ extension AppNotificationBuilder {
     func set(_ tag: String) -> AppNotificationBuilder {
         try! setTag(tag)
     }
+
+    @discardableResult
+    func scenario(_ scenario: AppNotificationScenario) -> AppNotificationBuilder {
+        try! setScenario(scenario)
+    }
 }
 
 // MARK: - AppNotificationBuilder+BuilderTransformable

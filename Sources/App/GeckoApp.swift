@@ -1,5 +1,6 @@
 import FoundationEssentials
 import WinAppSDK
+import WinSDK
 import WindowsFoundation
 
 @_spi(WinRTImplements) import WindowsFoundation
@@ -41,6 +42,10 @@ public final class GeckoApp {
             logger: logger
         )
 
+        let router: ApplicationRouter = Router(
+            logger: logger
+        )
+
         let updateService = UpdateService(
             httpClient: httpClient,
             gpuLookupService: gpuLookupService,
@@ -52,6 +57,7 @@ public final class GeckoApp {
             httpClient: httpClient,
             updateService: updateService,
             notificationPresenter: notificationPresenter,
+            router: router,
             logger: logger
         )
 
@@ -77,6 +83,7 @@ extension GeckoApp {
         private let httpClient: HTTPClient
         private let updateService: any UpdateServicing
         private let notificationPresenter: any NotificationPresenting
+        private let router: ApplicationRouter
         private let logger: Logging
 
         // MARK: - Init
@@ -85,11 +92,13 @@ extension GeckoApp {
             httpClient: HTTPClient,
             updateService: any UpdateServicing,
             notificationPresenter: any NotificationPresenting,
+            router: ApplicationRouter,
             logger: Logging
         ) {
             self.httpClient = httpClient
             self.updateService = updateService
             self.notificationPresenter = notificationPresenter
+            self.router = router
             self.logger = logger
         }
 
@@ -117,6 +126,10 @@ extension GeckoApp {
                 subtitle: "Version \(download.version)",
                 actions: [
                     .cancel,
+                    .contextMenuItem("View release notes") { [weak router] in
+                        guard let url = download.detailsURL else { return }
+                        router?.open(url: url)
+                    },
                     .default("Download") { [weak self] in
                         guard let self else { return }
                         onDownloadClicked(download: download)

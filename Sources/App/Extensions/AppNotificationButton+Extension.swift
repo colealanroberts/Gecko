@@ -28,4 +28,20 @@ extension AppNotificationButton {
     func argument(_ a: String, _ b: String) -> AppNotificationButton {
         try! addArgument(a, b)
     }
+
+    @discardableResult
+    func asContextMenuItem() -> AppNotificationButton {
+        try! setContextMenuPlacement()
+    }
+}
+
+// MARK: - AppNotificationButton+BuilderTransformable
+
+extension AppNotificationButton: Transformable {
+    @discardableResult
+    func transform(
+        _ transformer: (AppNotificationButton) -> AppNotificationButton
+    ) -> AppNotificationButton {
+        transformer(self)
+    }
 }

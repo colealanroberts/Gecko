@@ -17,6 +17,9 @@ extension UI {
         /// The title of the button.
         let title: String
 
+        /// The placement of the button.
+        let placement: Placement
+
         /// The action to execute when the button is clicked.
         let onClick: () -> Void
 
@@ -43,6 +46,24 @@ extension UI.Action {
     }
 }
 
+// MARK: - UI.Action.Placement
+
+extension UI.Action {
+    /// Represents where a button is placed in a notification.
+    enum Placement {
+        /// The button is placed in the body.
+        case `default`
+
+        /// The button is placed as a secondary context menu item.
+        /// - Note: These are visibile when right-clicking the notification *or* selecting the ellipsis (overflow) menu.
+        case contextMenu
+
+        // MARK: - Utility
+
+        var isContextMenu: Bool { self == .contextMenu }
+    }
+}
+
 // MARK: - UI.Action+Util
 
 extension UI.Action {
@@ -52,7 +73,8 @@ extension UI.Action {
     ) -> Self {
         .init(
             style: .critical,
-            title: title, 
+            title: title,
+            placement: .default,
             onClick: onClick
         )
     }
@@ -64,6 +86,7 @@ extension UI.Action {
         .init(
             style: .default, 
             title: title, 
+            placement: .default,
             onClick: onClick
         )
     }
@@ -74,7 +97,20 @@ extension UI.Action {
     ) -> Self {
         .init(
             style: .success, 
-            title: title, 
+            title: title,
+            placement: .default,
+            onClick: onClick
+        )
+    }
+
+    static func contextMenuItem(
+        _ title: String,
+        _ onClick: @escaping () -> Void
+    )-> Self {
+        .init(
+            style: .default, 
+            title: title,
+            placement: .contextMenu,
             onClick: onClick
         )
     }
