@@ -29,6 +29,16 @@ final class CoreHTTPClient: HTTPClient {
 
     private lazy var decoder: JSONDecoder = .init()
     private lazy var downloadDelegate = DownloadTaskDelegate()
+
+    private let logger: Logging
+
+    // MARK: - Init
+
+    init(
+        logger: Logging
+    ) {
+        self.logger = logger
+    }
     
     // MARK: - Public Methods
 
@@ -50,8 +60,11 @@ final class CoreHTTPClient: HTTPClient {
     }
 
     func cancel(id: String) {
-        if let task = downloadDelegate.tasks[id] {
+        if let task = downloadDelegate.tasks[id].take() {
             task.cancel()
+            logger.debug("Cancelling task: \(id)")
+        } else {
+            logger.debug("Unable to cancel task.")
         }
     }
 }
@@ -67,7 +80,7 @@ extension CoreHTTPClient {
         nonisolated(unsafe) var onChange: ((DownloadSnapshot) -> Void)?
 
         /// A dictionary containing in-flight download tasks.
-        nonisolated(unsafe) private(set) var tasks: [String: URLSessionTask] = [:]
+        nonisolated(unsafe) fileprivate(set) var tasks: [String: URLSessionTask] = [:]
         
         // MARK: - Private Properties
 

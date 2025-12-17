@@ -37,3 +37,11 @@ struct Version: Comparable {
         (lhs.major, lhs.minor) < (rhs.major, rhs.minor)
     }
 }
+
+// MARK: Version+CustomStringConvertible
+
+extension Version: CustomStringConvertible {
+    var description: String {
+        "\(major).\(minor)"
+    }
+}

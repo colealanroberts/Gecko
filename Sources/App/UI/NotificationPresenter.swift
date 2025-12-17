@@ -4,6 +4,9 @@ import WindowsFoundation
 // MARK: - NotificationPresenting
 
 protocol NotificationPresenting {
+    /// Whether the application can present notifications.
+    var isSupported: Bool { get }
+
     /// Presents a notification in the native Windows sidebar.
     func present(_ notification: GeckoNotification)
 
@@ -15,6 +18,10 @@ protocol NotificationPresenting {
 
 final class NotificationPresenter: NotificationPresenting {
 
+    // MARK: - Public Properties
+
+    var isSupported: Bool { manager.isSupported }
+
     // MARK: - Private Properties
 
     /// The concrete Windows notification manager.
@@ -23,9 +30,16 @@ final class NotificationPresenter: NotificationPresenting {
     /// A dictionary of identifiers and associated closures to execute - keyed by identifier (`Action.identifier`).
     private var actionHandlers: [String: () -> Void] = [:]
 
+    /// The application logger.
+    private let logger: Logging
+
     // MARK: - Init
 
-    init() {
+    init(
+        logger: Logging
+    ) {
+        self.logger = logger
+
         registerNotificationHandler()
     }
 
@@ -59,7 +73,7 @@ final class NotificationPresenter: NotificationPresenting {
         do {
             try manager.register()  
         } catch {
-            debugPrint(error)
+            logger.warning(error.localizedDescription)
         }
     }
 }

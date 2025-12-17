@@ -31,18 +31,7 @@ final class ConfigurationProvider: ConfigurationProviding {
     // MARK: - Public Methods
 
     func load() -> Configuration {
-        // Default location: %APPDATA%\Local\Gecko\config.json.
-        let supportDirectory = FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        )[0]
-
-        let gecko = supportDirectory.appendingPathComponent(
-            "Gecko", 
-            isDirectory: true
-        )
-
-        let url = gecko.appendingPathComponent("config.json")
+        let url = URL.geckoDirectory.appendingPathComponent("config.json")
 
         guard FileManager.default.fileExists(atPath: url.path) else {
             print("No custom `config.json` file found at \(url.absoluteString). Creating a new config.")
@@ -61,7 +50,7 @@ final class ConfigurationProvider: ConfigurationProviding {
 
             return config
         } catch {
-            print(error.localizedDescription)
+            print(error)
             return .default
         }
     }
@@ -75,7 +64,7 @@ final class ConfigurationProvider: ConfigurationProviding {
             let data = try encoder.encode(Configuration.default)
             try FileManager.default.createFile(atPath: url.path, contents: data)
         } catch {
-            print(error.localizedDescription)
+            print(error)
         }
     }
 }

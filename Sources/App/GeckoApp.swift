@@ -9,31 +9,50 @@ public final class GeckoApp {
     // MARK: - Private Properties
 
     private let viewModel: ViewModel
+    private var logger: Logging
 
     // MARK: - Init
 
     init() {
         let configurationProvider = ConfigurationProvider()
         let config = configurationProvider.load()
+        let logger = Logger(logLevel: config.logLevel)
 
-        let httpClient = CoreHTTPClient()
+        let notificationPresenter = NotificationPresenter(
+            logger: logger
+        )
+        
+        if !notificationPresenter.isSupported {
+            let message = "Gecko requires Windows notification support. Please ensure you're running Windows 10 or later."
+            logger.critical(message)
+            precondition(notificationPresenter.isSupported, message)
+        }
+        
+        let httpClient = CoreHTTPClient(
+            logger: logger
+        )
 
         let gpuLookupService = GPULookupService(
-            httpClient: httpClient
+            httpClient: httpClient,
+            logger: logger
         )
 
         let updateService = UpdateService(
             httpClient: httpClient,
-            gpuLookupService: gpuLookupService
+            gpuLookupService: gpuLookupService,
+            logger: logger
         )
-
-        let notificationPresenter = NotificationPresenter()
 
         self.viewModel = GeckoApp.ViewModel(
             httpClient: httpClient,
             updateService: updateService,
-            notificationPresenter: notificationPresenter
+            notificationPresenter: notificationPresenter,
+            logger: logger
         )
+
+        self.logger = logger
+
+        logger.debug("[-] Finished launching.")
     }
 
     // MARK:  - Public Methods
@@ -53,17 +72,20 @@ extension GeckoApp {
         private let httpClient: HTTPClient
         private let updateService: any UpdateServicing
         private let notificationPresenter: any NotificationPresenting
+        private let logger: Logging
 
         // MARK: - Init
 
         init(
             httpClient: HTTPClient,
             updateService: any UpdateServicing,
-            notificationPresenter: any NotificationPresenting
+            notificationPresenter: any NotificationPresenting,
+            logger: Logging
         ) {
             self.httpClient = httpClient
             self.updateService = updateService
             self.notificationPresenter = notificationPresenter
+            self.logger = logger
         }
 
         // MARK: - Public Methods
@@ -75,7 +97,7 @@ extension GeckoApp {
                         presentUpdateNotification(for: download)
                     }
                 } catch {
-
+                    logger.warning(error.localizedDescription)
                 }
             }
         }
@@ -153,7 +175,7 @@ extension GeckoApp {
                         }
                     )
                 } catch {
-
+                    logger.warning(error.localizedDescription)
                 }
             }
         }

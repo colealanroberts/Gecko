@@ -1,11 +1,19 @@
 import WinAppSDK
 
 extension AppNotificationManager {
+    var isSupported: Bool {
+        do {
+            return try Self.isSupported()
+        } catch {
+            return false
+        }
+    }
+
     func present(_ notification: GeckoNotification) {
         do {
             try show(notification.materialize())
         } catch {
-            print(error.localizedDescription)
+            print(error)
         }
     }
 
@@ -13,7 +21,7 @@ extension AppNotificationManager {
         do {
             _ = try updateAsync(data, notification.tag)
         } catch {
-            print(error.localizedDescription)
+            print(error)
         }
     }
 }

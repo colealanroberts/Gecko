@@ -7,9 +7,9 @@ struct Configuration: Codable {
 
     /// MARK: - Public Properties
 
-    /// Whether logging is enabled.
-    /// - Note: The default value is `false`.
-    let isLoggingEnabled: Bool
+    /// The logging level of the application.
+    /// - Note: The default value is `none`.
+    let logLevel: LogLevel
 
     /// How often updates are checked in seconds.
     /// - Note: 
@@ -30,7 +30,7 @@ struct Configuration: Codable {
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let _isLoggingEnabled = try container.decodeIfPresent(Bool.self, forKey: .isLoggingEnabled)
+        let _logLevel = try container.decodeIfPresent(LogLevel.self, forKey: .logLevel)
         let _updateCheckInterval = try container.decodeIfPresent(Int.self, forKey: .updateCheckInterval)
         let _shouldLaunchAtStartup = try container.decodeIfPresent(Bool.self, forKey: .shouldLaunchAtStartup)
 
@@ -39,19 +39,19 @@ struct Configuration: Codable {
         let initial = Configuration.default
         let updateCheckInterval = _updateCheckInterval ?? initial.updateCheckInterval
 
-        self.isLoggingEnabled = _isLoggingEnabled ?? initial.isLoggingEnabled
+        self.logLevel = _logLevel ?? initial.logLevel
         self.updateCheckInterval = updateCheckInterval.clamped(from: .fiveMinutes, to: .oneWeek)
         self.shouldLaunchAtStartup = _shouldLaunchAtStartup ?? initial.shouldLaunchAtStartup
 
-        self.containsIncompletes = _isLoggingEnabled == nil || _updateCheckInterval == nil || _shouldLaunchAtStartup == nil
+        self.containsIncompletes = _logLevel == nil || _updateCheckInterval == nil || _shouldLaunchAtStartup == nil
     }
 
     private init(
-        isLoggingEnabled: Bool,
+        logLevel: LogLevel,
         updateCheckInterval: Int,
         shouldLaunchAtStartup: Bool
     ) {
-        self.isLoggingEnabled = isLoggingEnabled
+        self.logLevel = logLevel
         self.updateCheckInterval = updateCheckInterval
         self.shouldLaunchAtStartup = shouldLaunchAtStartup
     }
@@ -60,7 +60,7 @@ struct Configuration: Codable {
     
     static var `default`: Self {
         .init(
-            isLoggingEnabled: false,
+            logLevel: .none,
             updateCheckInterval: 43_200,
             shouldLaunchAtStartup: true
         )
@@ -71,7 +71,7 @@ struct Configuration: Codable {
 
 private extension Configuration {
     enum CodingKeys: String, CodingKey {
-        case isLoggingEnabled, updateCheckInterval, shouldLaunchAtStartup
+        case logLevel, updateCheckInterval, shouldLaunchAtStartup
     }
 }
 

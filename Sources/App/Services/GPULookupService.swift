@@ -35,13 +35,16 @@ final class GPULookupService: GPULookupServicing {
 
     private let baseURL = URL(string: "https://raw.githubusercontent.com/ZenitH-AT/nvidia-data/main")!
     private let httpClient: HTTPClient
+    private let logger: Logging
 
     // MARK: - Init
 
     init(
-        httpClient: HTTPClient
+        httpClient: HTTPClient,
+        logger: Logging
     ) {
         self.httpClient = httpClient
+        self.logger = logger
     }
 
     // MARK: - Public Methods
@@ -52,16 +55,21 @@ final class GPULookupService: GPULookupServicing {
             cachePolicy: .reloadRevalidatingCacheData 
         )
 
-        let gpus: GPUContainerResponse = try await httpClient.request(request: request)
+        do {
+            let gpus: GPUContainerResponse = try await httpClient.request(request: request)
 
-        if let desktop = gpus.desktop[name] {
-            return desktop
+            if let desktop = gpus.desktop[name] {
+                return desktop
+            }
+
+            if let notebook = gpus.notebook[name] {
+                return notebook
+            }
+        } catch {
+            logger.warning(error.localizedDescription)
         }
 
-        if let notebook = gpus.notebook[name] {
-            return notebook
-        }
-
+        logger.warning("Unable to find gpu with id: \(name).")
         return nil
     }
 
@@ -71,11 +79,19 @@ final class GPULookupService: GPULookupServicing {
             cachePolicy: .reloadRevalidatingCacheData 
         )
 
-        let oses: [OperatingSystemResponse] = try await httpClient.request(request: request)
+        do {
+            let oses: [OperatingSystemResponse] = try await httpClient.request(request: request)
+            let version = "\(os.version.major).\(os.version.minor)"
+            let bit = os.is64Bit ? "64" : "32"
 
-        let version = "\(os.version.major).\(os.version.minor)"
-        let bit = os.is64Bit ? "64" : "32"
-
-        return oses.first { $0.code == version && $0.name.contains(bit) }?.id
+            if let id = oses.first { $0.code == version && $0.name.contains(bit) }?.id {
+                return id
+            }
+        } catch {
+            logger.warning(error.localizedDescription)
+        }
+    
+        logger.warning("Unable to find os: \(os.version.major).\(os.version.minor).")
+        return nil
     }
 }
