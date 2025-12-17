@@ -30,7 +30,7 @@ struct Configuration: Codable {
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let _logLevel = try container.decodeIfPresent(LogLevel.self, forKey: .logLevel)
+        let _logLevel = try container.decodeIfPresent(Int.self, forKey: .logLevel)
         let _updateCheckInterval = try container.decodeIfPresent(Int.self, forKey: .updateCheckInterval)
         let _shouldLaunchAtStartup = try container.decodeIfPresent(Bool.self, forKey: .shouldLaunchAtStartup)
 
@@ -38,10 +38,11 @@ struct Configuration: Codable {
         // is missing or incomplete.
         let initial = Configuration.default
         let updateCheckInterval = _updateCheckInterval ?? initial.updateCheckInterval
+        let logLevel  = _logLevel ?? initial.logLevel.rawValue
 
-        self.logLevel = _logLevel ?? initial.logLevel
         self.updateCheckInterval = updateCheckInterval.clamped(from: .fiveMinutes, to: .oneWeek)
         self.shouldLaunchAtStartup = _shouldLaunchAtStartup ?? initial.shouldLaunchAtStartup
+        self.logLevel = LogLevel(rawValue: logLevel.clamped(from: LogLevel.none.rawValue, to: LogLevel.debug.rawValue)) ?? initial.logLevel
 
         self.containsIncompletes = _logLevel == nil || _updateCheckInterval == nil || _shouldLaunchAtStartup == nil
     }

@@ -1,7 +1,7 @@
 import FoundationEssentials
 
 /// Describes the different log levels that the logger accepts.
-enum LogLevel: Int, Codable {
+enum LogLevel: Int, Codable, CaseIterable {
     /// No logs are reported or recorded to disk.
     case none = 0
     

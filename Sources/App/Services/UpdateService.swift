@@ -18,28 +18,31 @@ final class UpdateService: UpdateServicing {
     private let httpClient: HTTPClient
     private let gpuLookupService: GPULookupServicing
     private let logger: Logging
+    private let systemInfoProvider: SystemInfoProviding
 
     // MARK: - Init
 
     init(
         httpClient: HTTPClient,
         gpuLookupService: GPULookupServicing,
+        systemInfoProvider: SystemInfoProviding,
         logger: Logging
     ) {
         self.httpClient = httpClient
         self.gpuLookupService = gpuLookupService
+        self.systemInfoProvider = systemInfoProvider
         self.logger = logger
     }
 
     // MARK: - Public Methods
 
     func fetch() async throws -> DriverResponse.Download? {
-        guard let gpu = SystemInfoProvider.currentGPU() else {
+        guard let gpu = systemInfoProvider.currentGPU() else {
             logger.warning("Unable to retrieve current gpu.")
             return nil
         }
 
-        guard let os = SystemInfoProvider.currentOS() else {
+        guard let os = systemInfoProvider.currentOS() else {
             logger.warning("Unable to retrieve current operating system.")
             return nil
         }

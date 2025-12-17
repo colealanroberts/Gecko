@@ -10,10 +10,11 @@ extension AppNotificationManager {
     }
 
     func present(_ notification: GeckoNotification) {
+        try! show(notification.materialize())
         do {
             try show(notification.materialize())
         } catch {
-            print(error)
+            debugPrint(error)
         }
     }
 
@@ -21,7 +22,7 @@ extension AppNotificationManager {
         do {
             _ = try updateAsync(data, notification.tag)
         } catch {
-            print(error)
+            debugPrint(error)
         }
     }
 }

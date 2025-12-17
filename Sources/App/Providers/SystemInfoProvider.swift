@@ -5,13 +5,13 @@ import WinSDK
 
 protocol OSProviding {
     /// Returns the current version of Windows on this machine, including bitness.
-    static func currentOS() -> OS?
+    func currentOS() -> OS?
 }
 
 // MARK: - GPUProviding
 protocol GPUProviding {
     /// Returns the current gpu (`GPU`), if any.
-    static func currentGPU() -> GPU? 
+    func currentGPU() -> GPU? 
 }
 
 // MARK: - SystemInfoProviding
@@ -22,9 +22,21 @@ typealias SystemInfoProviding = OSProviding & GPUProviding
 
 final class SystemInfoProvider: SystemInfoProviding {
 
-    // MARK: - Public Properties
+    // MARK: - Private Properties
 
-    static func currentGPU() -> GPU? {
+    private let logger: Logging
+
+    // MARK: - Init
+
+    init(
+        logger: Logging
+    ) {
+        self.logger = logger
+    }
+
+    // MARK: - Public Methods
+
+    func currentGPU() -> GPU? {
         let process = Process()
         let powershellPath = "\(ProcessInfo.systemRoot)\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
         
@@ -48,18 +60,21 @@ final class SystemInfoProvider: SystemInfoProviding {
             process.waitUntilExit()
             
             guard process.terminationStatus == 0 else {
+                logger.warning("terminationStatus: \(process.terminationReason)")
                 return nil
             }
             
             guard let data = try output.fileHandleForReading.readToEnd() else {
+                logger.warning("Unable to construct data.")
                 return nil
             }
 
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
             let name = json["Name"] as? String,
             let version = json["DriverVersion"] as? String 
             else {
-                return nil
+                logger.warning("Unable to construct object.")
+                return  nil
             }
 
             return GPU(
@@ -67,11 +82,12 @@ final class SystemInfoProvider: SystemInfoProviding {
                 rawVersion: version
             )
         } catch {
+            logger.warning(error.localizedDescription)
             return nil
         }
     }
 
-    static func currentOS() -> OS? {
+    func currentOS() -> OS? {
         var osvi = OSVERSIONINFOEXW()
         
         osvi.dwOSVersionInfoSize = UInt32(MemoryLayout<OSVERSIONINFOEXW>.size)

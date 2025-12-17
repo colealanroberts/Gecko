@@ -50,7 +50,7 @@ final class ConfigurationProvider: ConfigurationProviding {
 
             return config
         } catch {
-            print(error)
+            debugPrint(error)
             return .default
         }
     }
@@ -62,9 +62,9 @@ final class ConfigurationProvider: ConfigurationProviding {
             let parentDirectory = url.deletingLastPathComponent()
             try FileManager.default.createDirectory(at: parentDirectory, withIntermediateDirectories: true)
             let data = try encoder.encode(Configuration.default)
-            try FileManager.default.createFile(atPath: url.path, contents: data)
+            FileManager.default.createFile(atPath: url.path, contents: data)
         } catch {
-            print(error)
+            debugPrint(error)
         }
     }
 }

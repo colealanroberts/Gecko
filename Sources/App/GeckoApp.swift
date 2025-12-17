@@ -37,9 +37,14 @@ public final class GeckoApp {
             logger: logger
         )
 
+        let systemInfoProvider = SystemInfoProvider(
+            logger: logger
+        )
+
         let updateService = UpdateService(
             httpClient: httpClient,
             gpuLookupService: gpuLookupService,
+            systemInfoProvider: systemInfoProvider,
             logger: logger
         )
 
@@ -163,14 +168,16 @@ extension GeckoApp {
                 do {
                     let fileURL = try await self.httpClient.download(
                         url: url, 
-                        onChange: { snapshot in
+                        onChange: { [weak self] snapshot in
                             onTaskIdentifier(snapshot.identifier)
 
                             if let update = notification.update(snapshot: snapshot) {
-                                self.notificationPresenter.update(
+                                self?.notificationPresenter.update(
                                     data: update,
                                     in: notification
                                 )
+                                
+                                 self?.logger.debug("downloading \(snapshot.identifier)...\(snapshot.percentage ?? 0)%")
                             }
                         }
                     )
