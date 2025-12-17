@@ -63,7 +63,7 @@ final class SystemInfoProvider: SystemInfoProviding {
                 logger.warning("terminationStatus: \(process.terminationReason)")
                 return nil
             }
-            
+
             guard let data = try output.fileHandleForReading.readToEnd() else {
                 logger.warning("Unable to construct data.")
                 return nil
@@ -92,8 +92,9 @@ final class SystemInfoProvider: SystemInfoProviding {
         
         osvi.dwOSVersionInfoSize = UInt32(MemoryLayout<OSVERSIONINFOEXW>.size)
 
-        guard let ntdll = "ntdll.dll".wide.withUnsafeBufferPointer({ LoadLibraryW($0.baseAddress) }) else {
-            fatalError()
+        guard let ntdll = "ntdll.dll".wide.withUnsafeBufferPointer ({ LoadLibraryW($0.baseAddress) }) else {
+            logger.critical("Unable to load library ntdll.dll")
+            return nil
         }
 
         defer {
@@ -101,7 +102,8 @@ final class SystemInfoProvider: SystemInfoProviding {
         }
         
         guard let proc = GetProcAddress(ntdll, "RtlGetVersion") else {
-            fatalError()
+            logger.critical("Failed to retrieve os information.")
+            return nil
         }
 
         typealias RtlGetVersionType = @convention(c) (UnsafeMutablePointer<OSVERSIONINFOEXW>) -> Int32

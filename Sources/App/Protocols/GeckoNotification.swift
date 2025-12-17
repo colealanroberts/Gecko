@@ -1,2 +1,4 @@
+import FoundationEssentials
+
 /// A typealias for notification that defines a contract for all Gecko notifications.
-typealias GeckoNotification = NotificationIdentifiable & NotificationMaterializable
+typealias GeckoNotification = Identifiable & NotificationMaterializable
