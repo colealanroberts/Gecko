@@ -16,11 +16,11 @@ protocol LocalRouter: AnyObject {
 
 // MARK: - ApplicationRouter
 
-typealias ApplicationRouter = URLRouter & LocalRouter
+typealias ApplicationRouting = URLRouter & LocalRouter
 
 // MARK: - LinkHandler
 
-final class Router: ApplicationRouter {
+final class ApplicationRouter: ApplicationRouting {
 
     // MARK: - Private Properties
 

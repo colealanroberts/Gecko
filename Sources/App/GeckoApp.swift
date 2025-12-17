@@ -42,7 +42,7 @@ public final class GeckoApp {
             logger: logger
         )
 
-        let router: ApplicationRouter = Router(
+        let router: ApplicationRouting = ApplicationRouter(
             logger: logger
         )
 
@@ -83,7 +83,7 @@ extension GeckoApp {
         private let httpClient: HTTPClient
         private let updateService: any UpdateServicing
         private let notificationPresenter: any NotificationPresenting
-        private let router: ApplicationRouter
+        private let router: ApplicationRouting
         private let logger: Logging
 
         // MARK: - Init
@@ -92,7 +92,7 @@ extension GeckoApp {
             httpClient: HTTPClient,
             updateService: any UpdateServicing,
             notificationPresenter: any NotificationPresenting,
-            router: ApplicationRouter,
+            router: ApplicationRouting,
             logger: Logging
         ) {
             self.httpClient = httpClient
