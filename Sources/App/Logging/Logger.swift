@@ -68,7 +68,7 @@ final class Logger: Logging {
         metadata: [String: String]?
     ) {
         guard logLevel != .none else { 
-            return 
+            return
         }
 
         // Ensure that hierarchical order is respected.
@@ -106,13 +106,13 @@ final class Logger: Logging {
 
             debugPrint(message.description)
 
-            if logLevel.isDiskPersisted {
+            if level.isDiskPersisted {      
                 do {
                     let data = try encoder.encode(message)
                     try write(data: data)
                 }  catch {
                     debugPrint(error.localizedDescription)
-                }
+                }   
             }
         }
     }
