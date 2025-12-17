@@ -38,10 +38,17 @@ extension UI {
                 .attachStatus()
                 .attachValueString()
 
-            actions.forEach {
-                let button = AppNotificationButton.make($0.title)
-                    .style($0.style)
-                    .argument("actionHandler", $0.identifier)
+            actions.forEach { action in
+                let button = AppNotificationButton.make(action.title)
+                    .style(action.style)
+                    .argument("actionHandler", action.identifier)
+                    .transform {
+                        if action.placement.isContextMenu {
+                            return $0.asContextMenuItem()
+                        }
+
+                        return $0
+                    }
                     
                 builder.add(button)
             }

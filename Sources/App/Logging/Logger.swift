@@ -48,8 +48,17 @@ final class Logger: Logging {
     // MARK: - Private Properties
 
     private lazy var decoder = JSONDecoder()
-    private lazy var encoder = JSONEncoder()
-    private lazy var queue: DispatchQueue = { .init(label: "com.gecko.logger") }()
+
+    private lazy var encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return encoder
+    }()
+
+    private lazy var queue: DispatchQueue = { 
+        .init(label: "com.gecko.logger") 
+    }()
+
     private let logLevel: LogLevel
 
     // MARK: - Init

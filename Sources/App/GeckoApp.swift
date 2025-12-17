@@ -3,6 +3,12 @@ import WinAppSDK
 import WinSDK
 import WindowsFoundation
 
+// TODO:
+// - Cleanup download when cancelled or installed
+// - Launch installer
+// - App icon
+// - Package app?
+
 @_spi(WinRTImplements) import WindowsFoundation
 
 public final class GeckoApp {
@@ -157,6 +163,9 @@ extension GeckoApp {
                 actions: [
                     .default("Cancel") {
                         onCancel(taskIdentifier)
+                    },
+                    .contextMenuItem("Cancel download") {
+                        onCancel(taskIdentifier)
                     }
                 ]
             )
@@ -198,6 +207,8 @@ extension GeckoApp {
                             }
                         }
                     )
+
+                    logger.debug("File downloaded to: \(fileURL.absoluteString)")
                 } catch {
                     logger.warning(error.localizedDescription)
                 }

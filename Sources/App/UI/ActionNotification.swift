@@ -33,7 +33,6 @@ extension UI {
                     }
                     return $0
                 }
-                .scenario(.reminder)
 
             actions.forEach { action in
                 let button = AppNotificationButton.make(action.title)
