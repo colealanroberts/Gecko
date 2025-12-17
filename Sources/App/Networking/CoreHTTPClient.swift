@@ -61,8 +61,8 @@ final class CoreHTTPClient: HTTPClient {
 
     func cancel(id: String) {
         if let task = downloadDelegate.tasks[id].take() {
-            task.cancel()
             logger.debug("Cancelling task: \(id)")
+            task.cancel()
         } else {
             logger.debug("Unable to cancel task.")
         }

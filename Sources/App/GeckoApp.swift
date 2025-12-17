@@ -118,7 +118,9 @@ extension GeckoApp {
                 actions: [
                     .cancel,
                     .default("Download") { [weak self] in
-                        self?.onDownloadClicked(download: download)
+                        guard let self else { return }
+                        onDownloadClicked(download: download)
+                        logger.debug("Download clicked.")
                     }
                 ]
             )
@@ -128,7 +130,7 @@ extension GeckoApp {
 
         private func onDownloadClicked(
             download: DriverResponse.Download
-            ) {
+        ) {
             var taskIdentifier: String?
 
             let onCancel: (String?) -> Void = { [weak self] taskId in
@@ -172,12 +174,14 @@ extension GeckoApp {
                             onTaskIdentifier(snapshot.identifier)
 
                             if let update = notification.update(snapshot: snapshot) {
-                                self?.notificationPresenter.update(
+                                guard let self else { return }
+
+                                notificationPresenter.update(
                                     data: update,
                                     in: notification
                                 )
                                 
-                                 self?.logger.debug("downloading \(snapshot.identifier)...\(snapshot.percentage ?? 0)%")
+                                 logger.debug("Downloading \(snapshot.identifier ?? "")...\(snapshot.percentage ?? 0)%")
                             }
                         }
                     )
