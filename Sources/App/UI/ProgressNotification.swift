@@ -8,10 +8,9 @@ extension UI {
 
         // MARK: - Public Properties
 
-        let id: Foundation.UUID
+        let id: String
         let builder: AppNotificationBuilder
         let actions: [UI.Action]
-        let tag: String
 
         // MARK: - Private Properties
 
@@ -27,8 +26,7 @@ extension UI {
             actions: [UI.Action]
         ) {
             let builder = AppNotificationBuilder()
-            let id = Foundation.UUID()
-            let tag = id.uuidString
+            let id = Foundation.UUID().uuidString
 
             let bar = AppNotificationProgressBar.make()
                 .attachValue()
@@ -47,26 +45,24 @@ extension UI {
                         return $0
                     }
                     
-                builder.add(button)
+                builder.button(button)
             }
             
             builder
-                .add(title)
+                .text(title)
                 .transform {
                     if let subtitle {
-                        return $0.add(subtitle)
+                        return $0.text(subtitle)
                     }
 
                     return $0
                 }
-                .add(bar)
-                .set(tag)
+                .progressBar(bar)
 
             self.id = id
             self.title = title
             self.actions = actions
             self.builder = builder
-            self.tag = tag
         }
 
         // MARK: - Public Methods

@@ -4,19 +4,10 @@ import WinSDK
 // MARK: - LinkHanlding
 
 /// A contract for opening urls in the browser.
-protocol URLRouter: AnyObject {
+protocol ApplicationRouting: AnyObject {
     /// The URL to open.
     func open(url: URL)
 }
-
-/// A contract for opening filesystem paths.
-protocol LocalRouter: AnyObject {
-
-}
-
-// MARK: - ApplicationRouter
-
-typealias ApplicationRouting = URLRouter & LocalRouter
 
 // MARK: - LinkHandler
 

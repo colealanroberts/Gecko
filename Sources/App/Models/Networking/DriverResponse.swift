@@ -29,6 +29,11 @@ extension DriverResponse {
         /// The details url, opening the default web browser.
         let detailsURL: URL?
 
+        /// The filename of the download.
+        var fileName: String {
+            url.lastPathComponent
+        }
+
         enum CodingKeys: String, CodingKey {
             case downloadInfo
         }

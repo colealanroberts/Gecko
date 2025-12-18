@@ -8,7 +8,7 @@ extension UI {
 
         // MARK: - Public Properties
 
-        let id: FoundationEssentials.UUID
+        let id: String
         let actions: [UI.Action]
         let builder: AppNotificationBuilder
 
@@ -20,13 +20,13 @@ extension UI {
             actions: [UI.Action] = []
         ) {
             let builder = AppNotificationBuilder.make()
-            let id = FoundationEssentials.UUID()
+            let id = FoundationEssentials.UUID().uuidString
 
             builder
-                .add(title)
+                .text(title)
                 .transform {
                     if let subtitle {
-                        return $0.add(subtitle)
+                        return $0.text(subtitle)
                     }
                     return $0
                 }
@@ -43,7 +43,7 @@ extension UI {
                         return $0
                     }
 
-                builder.add(button)
+                builder.button(button)
             }
 
             self.id = id

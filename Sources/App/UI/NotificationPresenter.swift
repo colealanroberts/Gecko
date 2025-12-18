@@ -11,6 +11,9 @@ protocol NotificationPresenting {
 
     /// Updates a progress bar for the specified notification.
     func update(data: AppNotificationProgressData, in notification: UI.ProgressNotification)
+
+    /// Attempts to dismiss a notification by id.
+    func dismiss(id: String)
 }
 
 // MARK: - NotificationPresenter
@@ -56,6 +59,10 @@ final class NotificationPresenter: NotificationPresenting {
 
     func update(data: AppNotificationProgressData, in notification: UI.ProgressNotification) {
        manager.update(data: data, in: notification)
+    }
+
+    func dismiss(id: String) {
+        manager.dismiss(id: id)
     }
 
     // MARK: - Private Methods

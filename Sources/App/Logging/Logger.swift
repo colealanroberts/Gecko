@@ -3,7 +3,7 @@ import Dispatch
 
 // MARK: - Logging
 
-protocol Logging {
+protocol Logging: AnyObject {
     /// The session identifier associated with this logger.
     /// - Note: This is automatically attached with all logs in the given session.
     var sessionIdentifier: UUID { get }
@@ -180,7 +180,7 @@ extension LogMessage: CustomStringConvertible {
     var description: String {
         var desc = """
         session: \(sessionIdentifier)
-        time: \(timestamp)
+        timestamp: \(timestamp)
         level: \(level)
         value: \(value)
         """

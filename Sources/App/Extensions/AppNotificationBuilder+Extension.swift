@@ -12,22 +12,22 @@ extension AppNotificationBuilder {
     }
 
     @discardableResult
-    func add(_ string: String) -> AppNotificationBuilder {
+    func text(_ string: String) -> AppNotificationBuilder {
         try! addText(string)
     }
 
     @discardableResult
-    func add(_ button: AppNotificationButton) -> AppNotificationBuilder {
+    func button(_ button: AppNotificationButton) -> AppNotificationBuilder {
         try! addButton(button)
     }
 
     @discardableResult
-    func add(_ progressBar: AppNotificationProgressBar) -> AppNotificationBuilder {
+    func progressBar(_ progressBar: AppNotificationProgressBar) -> AppNotificationBuilder {
         try! addProgressBar(progressBar)
     }
 
     @discardableResult
-    func set(_ tag: String) -> AppNotificationBuilder {
+    func tag(_ tag: String) -> AppNotificationBuilder {
         try! setTag(tag)
     }
 

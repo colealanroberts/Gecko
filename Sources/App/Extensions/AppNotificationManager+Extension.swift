@@ -19,7 +19,15 @@ extension AppNotificationManager {
 
     func update(data: AppNotificationProgressData, in notification: UI.ProgressNotification) {
         do {
-            _ = try updateAsync(data, notification.tag)
+            _ = try updateAsync(data, notification.id)
+        } catch {
+            debugPrint(error)
+        }
+    }
+
+    func dismiss(id: String) {
+        do {
+            try removeByTagAsync(id)
         } catch {
             debugPrint(error)
         }
