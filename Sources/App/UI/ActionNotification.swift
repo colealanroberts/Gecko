@@ -16,7 +16,7 @@ extension UI {
 
         init(
             title: String,
-            subtitle: String?,
+            subtitle: String? = nil,
             actions: [UI.Action] = []
         ) {
             let builder = AppNotificationBuilder.make()

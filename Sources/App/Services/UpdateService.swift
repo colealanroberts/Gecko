@@ -94,7 +94,7 @@ final class UpdateService: UpdateServicing {
         logger.debug("Local version: \(local.description)")
         logger.debug("Remote version: \(remote.description)")
 
-        if remote <= local {
+        if remote > local {
             return download
         } else {
             logger.debug("The installed driver is the latest available.")

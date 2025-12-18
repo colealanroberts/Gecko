@@ -122,16 +122,16 @@ extension GeckoApp {
                 title: "New Nvidia driver available",
                 subtitle: "Version \(download.version)",
                 actions: [
+                    .default("Download") { [weak self] in
+                        guard let self else { return }
+                        onDownloadClicked(download: download)
+                        logger.debug("Download clicked.")
+                    },
                     .cancel,
                     .contextMenuItem("View release notes") { [weak router, weak logger] in
                         guard let url = download.detailsURL else { return }
                         router?.open(url: url)
                         logger?.debug("View release notes clicked.")
-                    },
-                    .default("Download") { [weak self] in
-                        guard let self else { return }
-                        onDownloadClicked(download: download)
-                        logger.debug("Download clicked.")
                     }
                 ]
             )
@@ -185,7 +185,7 @@ extension GeckoApp {
             
             Task {
                 do {
-                    let temporaryURL = try await self.httpClient.download(
+                    let downloadURL = try await self.httpClient.download(
                         url: download.url, 
                         onChange: { [weak self] snapshot in
                             onTaskIdentifier(snapshot.identifier)
@@ -203,65 +203,40 @@ extension GeckoApp {
                         }
                     )
 
-                    logger.debug("File downloaded to: \(temporaryURL.absoluteString)")
+                    logger.debug("File downloaded to: \(downloadURL.absoluteString)")
 
                     // When our download is complete - we'll dismiss our progress notification
-                    // and attempt to spawn a new notification.
+                    // and spawn a new notification.
                     await MainActor.run {
                         notificationPresenter.dismiss(id: notification.id)
-                    }
 
-                    await moveToDownloadsAndExecute(
-                        fileName: download.fileName,
-                        url: temporaryURL
-                    )                    
+                        presentCompletionNotification(
+                            fileName: download.fileName, 
+                            url: downloadURL
+                        )
+                    }    
                 } catch {
                     logger.warning(error.localizedDescription)
                 }
             }
         }
 
-        private func moveToDownloadsAndExecute(
+        private func presentCompletionNotification(
             fileName: String,
             url: URL
-        ) async {
-            guard let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first else {
-                logger.warning("Couldn't locate Downloads directory.")
-                return
-            }
+        ) {
+            let notification = UI.ActionNotification(
+                title: "Download completed",
+                actions: [
+                    .cancel,
+                    .default("Launch installer") { [weak router, weak logger] in
+                        router?.open(url: url)
+                        logger?.debug("Launch installer clicked.")
+                    }
+                ]
+            )
 
-            // The .tmp file extension here is intentional and allows us to copy
-            // the executable _without_ triggering a Windows AV scan. Then,
-            // we'll rename under the hood once the file move operation is complete.
-            let destination = downloads.appendingPathComponent(fileName)
-
-            do {
-                if FileManager.default.fileExists(atPath: destination.path) {
-                    try FileManager.default.removeItem(at: destination)
-                }
-
-                logger.debug("Began moving \(fileName) to \(destination.absoluteString).")
-                try FileManager.default.moveItem(at: url, to: destination)
-                logger.debug("Finished moving \(fileName) to \(destination.absoluteString).")
-
-                await MainActor.run {
-                    let notification = UI.ActionNotification(
-                        title: "Download completed",
-                        subtitle: "Moved installer to Downloads.",
-                        actions: [
-                            .cancel,
-                            .default("Launch installer") { [weak router, weak logger] in
-                                router?.open(url: destination)
-                                logger?.debug("Launch installer clicked.")
-                            }
-                        ]
-                    )
-
-                    notificationPresenter.present(notification)
-                }
-            } catch {
-                logger.warning("Failed to move file to Downloads.")
-            }
+            notificationPresenter.present(notification)
         }
     }
 }
