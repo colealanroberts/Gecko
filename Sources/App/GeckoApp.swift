@@ -227,6 +227,7 @@ extension GeckoApp {
         ) {
             let notification = UI.ActionNotification(
                 title: "Download completed",
+                subtitle: "Open in Downloads",
                 actions: [
                     .cancel,
                     .default("Launch installer") { [weak router, weak logger] in

@@ -69,12 +69,21 @@ final class SystemInfoProvider: SystemInfoProviding {
                 return nil
             }
 
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let name = json["Name"] as? String,
-            let version = json["DriverVersion"] as? String 
-            else {
-                logger.warning("Unable to construct object.")
-                return  nil
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                logger.warning("Unable to construct a valid JSON object.")
+                return nil
+            }
+
+            logger.debug(json.description)
+
+            guard let name = json["Name"] as? String else {
+                logger.warning("Unable to find a valid name.")
+                return nil
+            } 
+
+            guard let version = json["DriverVersion"] as? String else {
+                logger.warning("Unablet to construct a valid driver version.")
+                return nil
             }
 
             return GPU(
