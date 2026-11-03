@@ -16,7 +16,7 @@ Download the latest release from the [Releases](https://github.com/colealanrober
 Gecko stores its configuration in `%APPDATA%\Local\Gecko\config.json`. You can customize:
 
 - `logLevel` - Logging verbosity: `debug`, `info`, `warning`, or `critical`.
-- `updateCheckInterval` - Seconds between sequential update checks after an immediate launch check. Values are clamped to 300–604800 seconds; the interval restarts when Gecko relaunches.
+- `updateCheckInterval` - How often to check for updates in seconds.
 - `shouldLaunchAtStartup` - Whether Gecko should run on system boot.
 
 **Example Configuration:**
