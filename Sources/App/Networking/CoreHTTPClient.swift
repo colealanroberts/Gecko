@@ -17,7 +17,7 @@ extension HTTPClient {
 
 final class CoreHTTPClient: HTTPClient {
     private let logger: Logging
-    private let downloadDirectory: URL
+    private let downloadDirectory: URL?
     private let lock = NSLock()
     private var tasks: [String: URLSessionDataTask] = [:]
 
@@ -25,7 +25,7 @@ final class CoreHTTPClient: HTTPClient {
         self.logger = logger
         self.downloadDirectory = downloadDirectory ?? FileManager.default.urls(
             for: .downloadsDirectory, in: .userDomainMask
-        )[0]
+        ).first
     }
 
     func request<T: Decodable>(request: URLRequest) async throws -> T {
@@ -39,6 +39,7 @@ final class CoreHTTPClient: HTTPClient {
 
     func download(url: URL, onChange: @escaping (DownloadSnapshot) -> Void) async throws -> URL {
         try Task.checkCancellation()
+        guard let downloadDirectory else { throw URLError(.cannotCreateFile) }
         let id = UUID().uuidString
         let delegate = DownloadDelegate(
             id: id, directory: downloadDirectory, filename: url.lastPathComponent,
