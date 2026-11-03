@@ -1,3 +1,5 @@
+import Foundation
+
 struct GPU {
     /// The raw name of the device.
     private let rawName: String

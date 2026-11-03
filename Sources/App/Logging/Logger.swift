@@ -170,7 +170,7 @@ private extension LogLevel {
 
 private extension URL {
     static var logURL: Self {
-        URL.geckoDirectory.appending(path: "log.jsonl")
+        URL.geckoDirectory.appendingPathComponent("log.jsonl")
     }
 }
 

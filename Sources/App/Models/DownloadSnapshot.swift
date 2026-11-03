@@ -13,11 +13,13 @@ struct DownloadSnapshot {
 
     /// The current progress - 0.0 -> 1.0.
     var progress: Double {
-        Double(bytesWritten) / Double(totalBytes)
+        guard totalBytes > 0 else { return 0 }
+        return min(1, max(0, Double(bytesWritten) / Double(totalBytes)))
     }
 
     /// The current percentage - 0% -> 100%
     var percentage: Int? {
-        Int(progress * 100)
+        guard totalBytes > 0 else { return nil }
+        return Int(progress * 100)
     }
 }
