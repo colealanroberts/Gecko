@@ -4,7 +4,8 @@ A lightweight Windows desktop utility that automatically checks for Nvidia drive
 
 ## Requirements
 
-- Windows 10+
+- Windows 10+ (x64)
+- Windows App Runtime 1.7 (x64)
 - Nvidia GPU
 
 ## Installation
@@ -46,13 +47,20 @@ If you would like to report a bug, discuss the current state of the code, submit
 
 ## Building from Source
 
-Requires [Swift for Windows](https://www.swift.org/install/windows/) (5.9+):
+Requires [Swift for Windows](https://www.swift.org/install/windows/) (6.2.1+), Git, PowerShell 7, and the Windows App Runtime 1.7 (x64).
+
+Run in PowerShell from a path without spaces (the upstream SwiftWinRT toolchain may not support paths with spaces):
 
 ```
 git clone https://github.com/colealanroberts/Gecko.git
 cd Gecko
+pwsh -File Scripts/setup-dependencies.ps1
 swift build -c release
 ```
+
+The setup script downloads pinned projection repositories and NuGet packages into the ignored `Dependencies/` directory and generates the notification bindings missing from upstream's checked-in snapshot. Re-running a completed setup is a no-op. If the setup script changes, use a fresh `Dependencies/` directory; it refuses to overwrite modified dependency checkouts.
+
+Keep the generated DLLs and resource directories beside the executable when distributing a build. The bootstrap DLL must also be beside `Gecko.exe` (copy it from `Dependencies/swift-windowsappsdk/Sources/CWinAppSDK/nuget/bin`).
 
 ## License
 
