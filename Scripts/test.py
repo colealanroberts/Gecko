@@ -26,7 +26,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             for offset in range(0, len(payload), 33_333):
                 self.wfile.write(payload[offset:offset + 33_333])
                 self.wfile.flush()
-                if self.path == '/slow':
+                if self.path in ('/slow', '/driver.exe'):
                     time.sleep(0.02)
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
             pass
