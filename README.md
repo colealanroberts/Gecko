@@ -62,6 +62,10 @@ The setup script downloads pinned projection repositories and NuGet packages int
 
 Keep the generated DLLs and resource directories beside the executable when distributing a build. The bootstrap DLL must also be beside `Gecko.exe` (copy it from `Dependencies/swift-windowsappsdk/Sources/CWinAppSDK/nuget/bin`).
 
+### Tests
+
+On macOS, run `python3 Scripts/test.py`. This builds the platform-independent sources and runs unit and HTTP integration tests against a local server, including cancellation, HTTP failures, filesystem failures, progress, and unknown content lengths. `swift test` alone skips HTTP tests unless `GECKO_TEST_SERVER` is set. CI also builds the full Windows executable. Native notification interaction requires a Windows smoke test.
+
 ## License
 
 Gecko is available under the MIT license. See LICENSE for details.

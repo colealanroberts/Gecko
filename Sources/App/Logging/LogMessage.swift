@@ -1,4 +1,4 @@
-import FoundationEssentials
+import Foundation
 
 /// A codable struct that's utilized for storing logs.
 struct LogMessage: Codable {

@@ -1,4 +1,4 @@
-import FoundationEssentials
+import Foundation
 
 /// Represents an operating system.
 struct OperatingSystemResponse: Decodable {

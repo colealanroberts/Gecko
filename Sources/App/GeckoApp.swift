@@ -216,6 +216,7 @@ extension GeckoApp {
                         )
                     }    
                 } catch {
+                    notificationPresenter.dismiss(id: notification.id)
                     logger.warning(error.localizedDescription)
                 }
             }

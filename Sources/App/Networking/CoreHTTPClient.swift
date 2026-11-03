@@ -1,236 +1,190 @@
 import Foundation
+#if canImport(FoundationNetworking)
 import FoundationNetworking
-import FoundationEssentials
-
-// MARK: - HTTPClient
+#endif
 
 protocol HTTPClient {
-    /// Performs a request using the supplied `URLRequest` and returns `<T>`.
     func request<T: Decodable>(request: URLRequest) async throws -> T
-
-    /// Attempts to download a file from the supplied url - calling the `onChange` closure as the download progresses.
-    func download(url: URL, onChange: @escaping ((DownloadSnapshot) -> Void)) async throws -> URL
-
-    /// Cancels a download task with the specified identifier.
+    func download(url: URL, onChange: @escaping (DownloadSnapshot) -> Void) async throws -> URL
     func cancel(id: String)
 }
 
 extension HTTPClient {
     func request<T: Decodable>(url: URL) async throws -> T {
-        let req = URLRequest(url: url)
-        return try await request(request: req)
+        try await request(request: URLRequest(url: url))
     }
 }
 
-// MARK: - CoreHTTPClient
-
 final class CoreHTTPClient: HTTPClient {
-
-    // MARK: - Private Properties
-
-    private lazy var decoder: JSONDecoder = .init() 
-    private var downloadDelegate: DownloadDelegate?
     private let logger: Logging
+    private let downloadDirectory: URL?
+    private let lock = NSLock()
+    private var tasks: [String: URLSessionDataTask] = [:]
 
-    // MARK: - Init
-
-    init(
-        logger: Logging
-    ) {
+    init(logger: Logging, downloadDirectory: URL? = nil) {
         self.logger = logger
+        self.downloadDirectory = downloadDirectory ?? FileManager.default.urls(
+            for: .downloadsDirectory, in: .userDomainMask
+        ).first
     }
-    
-    // MARK: - Public Methods
 
     func request<T: Decodable>(request: URLRequest) async throws -> T {
-        let (data, _) = try await URLSession.shared.data(for: request)
-        return try decoder.decode(T.self, from: data)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let response = response as? HTTPURLResponse,
+              (200..<300).contains(response.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+        return try JSONDecoder().decode(T.self, from: data)
     }
 
-    func download(
-        url: URL, 
-        onChange: @escaping ((DownloadSnapshot) -> Void)
-    ) async throws -> URL {
-        guard let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first else {
-            logger.warning("Unable to locate Downloads directory")
-            throw URLError(.badURL)
-        }
-
-        let filename = url.lastPathComponent
-        let destination = downloads.appendingPathComponent(filename)
-
-        // Remove an existing download if one alreay exists.
-        try? FileManager.default.removeItem(at: destination)
-
-        // Create an empty file.
-        FileManager.default.createFile(atPath: destination.path, contents: nil)
-
-        // Use streaming delegate to write raw bytes directly to Downloads
-        let downloadDelegate = DownloadDelegate(
-            destination: destination, 
-            logger: logger,
-            onChange: onChange    
+    func download(url: URL, onChange: @escaping (DownloadSnapshot) -> Void) async throws -> URL {
+        try Task.checkCancellation()
+        guard let downloadDirectory else { throw URLError(.cannotCreateFile) }
+        let id = UUID().uuidString
+        let delegate = DownloadDelegate(
+            id: id, directory: downloadDirectory, filename: url.lastPathComponent,
+            onChange: onChange
         )
-        
-        // Configure our URLSession
-        let session = URLSession(
-            configuration: .default,
-            delegate: downloadDelegate,
-            delegateQueue: nil
-        )
-
-        self.downloadDelegate = downloadDelegate
-
-        return try await withCheckedThrowingContinuation { continuation in
-            downloadDelegate.continuation = continuation
-            let task = session.dataTask(with: url)
-            task.resume()
+        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
+        return try await withTaskCancellationHandler {
+            return try await withCheckedThrowingContinuation { continuation in
+                delegate.continuation = continuation
+                let task = session.dataTask(with: url)
+                register(task, id: id)
+                delegate.onComplete = { [weak self] in self?.removeTask(id: id) }
+                // Publish cancellation identity before the request or any body bytes arrive.
+                onChange(DownloadSnapshot(identifier: id, bytesWritten: 0, totalBytes: 0))
+                task.resume()
+                // Covers cancellation between the initial check and registration.
+                if Task.isCancelled { task.cancel() }
+            }
+        } onCancel: {
+            self.cancel(id: id)
         }
     }
 
     func cancel(id: String) {
-        downloadDelegate?.cancel(id: id)
+        lock.lock()
+        let task = tasks[id]
+        lock.unlock()
+        task?.cancel()
+    }
+
+    private func register(_ task: URLSessionDataTask, id: String) {
+        lock.lock()
+        tasks[id] = task
+        lock.unlock()
+    }
+
+    private func removeTask(id: String) {
+        lock.lock()
+        tasks[id] = nil
+        lock.unlock()
     }
 }
 
-// MARK: - CoreHTTPClient+StreamingDataDelegate
-
 extension CoreHTTPClient {
-    final class DownloadDelegate: NSObject, URLSessionDataDelegate {
-
-        // MARK: - Public Properties
-
-        nonisolated(unsafe) var continuation: CheckedContinuation<URL, Error>?
-
-        // MARK: - Private Properties
-
+    // URLSession serializes this delegate's callbacks. Only the task itself is
+    // accessed from other threads, through CoreHTTPClient's synchronized registry.
+    final class DownloadDelegate: NSObject, URLSessionDataDelegate, @unchecked Sendable {
+        var continuation: CheckedContinuation<URL, Error>?
+        var onComplete: (() -> Void)?
+        private let id: String
+        private let directory: URL
+        private let filename: String
+        private let temporaryURL: URL
+        private let onChange: (DownloadSnapshot) -> Void
         private var fileHandle: FileHandle?
         private var totalBytesExpected: Int64 = 0
         private var totalBytesWritten: Int64 = 0
-        private var tasks: [String: URLSessionDataTask] = [:]
-        private let logger: Logging
-        private let destination: URL
-        private let onChange: (DownloadSnapshot) -> Void
+        private var lastReportedBytes: Int64 = 0
 
-        // MARK: - Init
-
-        init(
-            destination: URL, 
-            logger: Logging,
-            onChange: @escaping (DownloadSnapshot) -> Void
-        ) {
-            self.destination = destination
+        init(id: String, directory: URL, filename: String, onChange: @escaping (DownloadSnapshot) -> Void) {
+            self.id = id
+            self.directory = directory
+            self.filename = filename.isEmpty ? "driver.exe" : filename
+            self.temporaryURL = directory.appendingPathComponent(".\(id).partial")
             self.onChange = onChange
-            self.logger = logger
-
-            super.init()
         }
 
-        // MARK: - Public Methods
-
-        func cancel(id: String) {
-            guard let task = tasks[id].take() else {
-                logger.debug("Unable to cancel task: \(id)")
-                return
-            }
-
-            logger.debug("Cancelling task: \(id)")
-            task.cancel()
-
-            do {
-                // Remove our half-written file.
-                try FileManager.default.removeItem(at: destination)
-            } catch {
-                logger.warning(error.localizedDescription)
-            }
-        }
-
-        // MARK: - Delegate Methods
-
-        func urlSession(
-            _ session: URLSession, 
-            dataTask: URLSessionDataTask, 
-            didReceive response: URLResponse, 
-            completionHandler: @escaping ((URLSession.ResponseDisposition) -> Void)
-        ) {
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-                logger.warning(response.debugDescription)
-                continuation?.resume(throwing: URLError(.badServerResponse))
+        func urlSession(_ session: URLSession, dataTask: URLSessionDataTask,
+                        didReceive response: URLResponse,
+                        completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+            guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
+                finish(.failure(URLError(.badServerResponse)))
                 completionHandler(.cancel)
-
                 return
             }
-
             totalBytesExpected = response.expectedContentLength
-
-            let identifier = Foundation.UUID().uuidString
-            dataTask.taskDescription = identifier
-            tasks[identifier] = dataTask
-
             do {
-                fileHandle = try FileHandle(forWritingTo: destination)
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil) else {
+                    throw CocoaError(.fileWriteUnknown)
+                }
+                fileHandle = try FileHandle(forWritingTo: temporaryURL)
                 completionHandler(.allow)
             } catch {
-                logger.warning(error.localizedDescription)
-                continuation?.resume(throwing: error)
+                finish(.failure(error))
                 completionHandler(.cancel)
             }
         }
 
-        func urlSession(
-            _ session: URLSession,
-            dataTask: URLSessionDataTask, 
-            didReceive data: Data
-        ) {
-            guard let fileHandle = fileHandle else {
-                logger.warning("No file handle available.")
-                return
-            }
-
+        func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+            guard continuation != nil, let fileHandle else { return }
             do {
                 try fileHandle.write(contentsOf: data)
                 totalBytesWritten += Int64(data.count)
-
-                // Dispatch a snapshot update for every 1MB (1,024kb) of data written.
-                if totalBytesWritten % 1_024 == 0 {
-                    let snapshot = DownloadSnapshot(
-                        identifier: dataTask.taskDescription,
-                        bytesWritten: totalBytesWritten,
-                        totalBytes: totalBytesExpected
-                    )
-
-                    onChange(snapshot)
+                if totalBytesWritten - lastReportedBytes >= 1_048_576 {
+                    lastReportedBytes = totalBytesWritten
+                    reportProgress()
                 }
             } catch {
-                logger.warning(error.localizedDescription)
-                continuation?.resume(throwing: error)
+                finish(.failure(error))
                 dataTask.cancel()
             }
         }
 
-        func urlSession(
-            _ session: URLSession,
-            task: URLSessionTask, 
-            didCompleteWithError error: Error?
-        ) {
+        func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
             defer {
-                do {
-                    try fileHandle?.close()
-
-                    if let taskIdentifier = task.taskDescription {
-                        tasks[taskIdentifier] = nil
-                    }
-                } catch {
-                    logger.warning(error.localizedDescription)
+                onComplete?()
+                session.finishTasksAndInvalidate()
+            }
+            guard continuation != nil else { return }
+            if let error {
+                finish(.failure(error))
+                return
+            }
+            do {
+                try fileHandle?.close()
+                fileHandle = nil
+                // Never replace a user's existing installer. Rename only after success.
+                var destination = directory.appendingPathComponent(filename)
+                if FileManager.default.fileExists(atPath: destination.path) {
+                    let base = destination.deletingPathExtension().lastPathComponent
+                    let ext = destination.pathExtension
+                    destination = directory.appendingPathComponent("\(base)-\(id)" + (ext.isEmpty ? "" : ".\(ext)"))
                 }
+                try FileManager.default.moveItem(at: temporaryURL, to: destination)
+                reportProgress()
+                finish(.success(destination))
+            } catch {
+                finish(.failure(error))
             }
+        }
 
-            if let error = error {
-                logger.warning(error.localizedDescription)
-                continuation?.resume(throwing: error)
-            } else {
-                continuation?.resume(returning: destination)
+        private func reportProgress() {
+            onChange(DownloadSnapshot(identifier: id, bytesWritten: totalBytesWritten, totalBytes: totalBytesExpected))
+        }
+
+        private func finish(_ result: Result<URL, Error>) {
+            guard let continuation else { return }
+            self.continuation = nil
+            try? fileHandle?.close()
+            fileHandle = nil
+            if case .failure = result {
+                try? FileManager.default.removeItem(at: temporaryURL)
             }
+            continuation.resume(with: result)
         }
     }
 }
