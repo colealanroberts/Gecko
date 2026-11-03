@@ -46,7 +46,7 @@ final class SystemInfoProvider: SystemInfoProviding {
             "-NoProfile",
             "-NonInteractive",
             "-Command",
-            "Get-CimInstance Win32_VideoController | Select-Object -First 1 Name, DriverVersion | ConvertTo-Json -Compress"
+            "Get-CimInstance Win32_VideoController | Where-Object { $_.PNPDeviceID -like 'PCI\\VEN_10DE*' } | Select-Object -First 1 Name, DriverVersion | ConvertTo-Json -Compress"
         ]
         
         let output = Pipe()
