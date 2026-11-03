@@ -43,6 +43,7 @@ let products: [Product] = []
 
 let package = Package(
     name: "Gecko",
+    platforms: [.macOS(.v13)],
     products: products,
     dependencies: dependencies,
     targets: [app, .testTarget(name: "GeckoTests", dependencies: ["Gecko"]) ]
