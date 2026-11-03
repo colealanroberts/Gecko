@@ -2,10 +2,45 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
+  packaging-check:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: compnerd/gha-setup-swift@v0.5.1
+        with:
+          swift-version: swift-6.2.1-release
+          swift-build: 6.2.1-RELEASE
+      - name: Build a small Swift runtime fixture
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force fixture, Dependencies | Out-Null
+          @'
+          import Foundation
+          import FoundationNetworking
+          let request = URLRequest(url: URL(string: "https://example.com")!)
+          print(request.url!.host!)
+          '@ | Set-Content fixture/main.swift
+          swiftc -O fixture/main.swift -o fixture/Gecko.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Fixture build failed' }
+      - name: Package the runtime fixture
+        shell: pwsh
+        run: ./Scripts/package-installer.ps1 -Version 0.0.0-test -BuildDirectory "$PWD/fixture"
+      - name: Install, reinstall, run, and uninstall the fixture
+        timeout-minutes: 5
+        shell: pwsh
+        run: ./Scripts/test-installer.ps1 -Installer "$PWD/dist/GeckoSetup.exe" -LaunchFixture
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: packaging-check-logs
+          path: ${{ runner.temp }}/Gecko-install.log
   windows-build:
     runs-on: windows-2022
     steps:
@@ -18,3 +53,54 @@ jobs:
         shell: pwsh
         run: ./Scripts/setup-dependencies.ps1
       - run: swift build -c release
+      - name: Build single-file installer
+        shell: pwsh
+        env:
+          GECKO_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '0.0.0-dev' }}
+        run: ./Scripts/package-installer.ps1 -Version $env:GECKO_VERSION
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GeckoSetup
+          path: |
+            dist/GeckoSetup.exe
+            dist/GeckoSetup.exe.sha256
+          if-no-files-found: error
+  installer-smoke-test:
+    timeout-minutes: 10
+    needs: windows-build
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: GeckoSetup
+          path: dist
+      - name: Install, resolve runtime DLLs, and uninstall without a Swift toolchain
+        shell: pwsh
+        run: ./Scripts/test-installer.ps1 -Installer "$PWD/dist/GeckoSetup.exe"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: installer-logs
+          path: ${{ runner.temp }}/Gecko-install.log
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [installer-smoke-test, packaging-check]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: GeckoSetup
+          path: dist
+      - name: Attach installer to a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --draft --title "$RELEASE_TAG" --generate-notes
+          fi
+          gh release upload "$RELEASE_TAG" dist/GeckoSetup.exe dist/GeckoSetup.exe.sha256 --clobber
