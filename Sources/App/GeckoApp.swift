@@ -15,6 +15,7 @@ public final class GeckoApp {
         let configurationProvider = ConfigurationProvider()
         let config = configurationProvider.load()
         let logger = Logger(logLevel: config.logLevel)
+        StartupProvider(logger: logger).configure(enabled: config.shouldLaunchAtStartup)
 
         let notificationPresenter = NotificationPresenter(
             logger: logger
