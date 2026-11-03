@@ -72,7 +72,7 @@ Get-ChildItem "$root/Dependencies" -Directory -Filter 'swift-*' | ForEach-Object
 $swiftVersion = (& swift --version | Select-Object -First 1)
 if ($swiftVersion -notmatch 'Swift version (\d+\.\d+(?:\.\d+)?)') { throw 'Cannot determine the Swift runtime version.' }
 $swiftTag = "swift-$($Matches[1])-RELEASE"
-foreach ($name in @('LICENSE.txt', 'NOTICE.txt')) {
+foreach ($name in @('LICENSE.txt')) {
     Invoke-WebRequest "https://raw.githubusercontent.com/swiftlang/swift/$swiftTag/$name" -OutFile "$licenses/Swift-$name"
 }
 $downloads = @{
