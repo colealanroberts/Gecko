@@ -26,13 +26,15 @@ final class ConfigurationProvider: ConfigurationProviding {
 
     // MARK: - Init
 
-    init() {}
+    private let url: URL
+
+    init(url: URL = URL.geckoDirectory.appendingPathComponent("config.json")) {
+        self.url = url
+    }
 
     // MARK: - Public Methods
 
     func load() -> Configuration {
-        let url = URL.geckoDirectory.appendingPathComponent("config.json")
-
         guard FileManager.default.fileExists(atPath: url.path) else {
             print("No custom `config.json` file found at \(url.absoluteString). Creating a new config.")
             writeConfigIfNecessary(at: url)
@@ -45,7 +47,7 @@ final class ConfigurationProvider: ConfigurationProviding {
             let config = try decoder.decode(Configuration.self, from: data)
 
             if config.containsIncompletes {
-                writeConfigIfNecessary(at: url)
+                writeConfigIfNecessary(at: url, configuration: config)
             }
 
             return config
@@ -57,12 +59,12 @@ final class ConfigurationProvider: ConfigurationProviding {
 
     // MARK: - Private Methods
 
-    private func writeConfigIfNecessary(at url: URL) {
+    private func writeConfigIfNecessary(at url: URL, configuration: Configuration = .default) {
         do {
             let parentDirectory = url.deletingLastPathComponent()
             try FileManager.default.createDirectory(at: parentDirectory, withIntermediateDirectories: true)
-            let data = try encoder.encode(Configuration.default)
-            FileManager.default.createFile(atPath: url.path, contents: data)
+            let data = try encoder.encode(configuration)
+            try data.write(to: url, options: .atomic)
         } catch {
             debugPrint(error)
         }

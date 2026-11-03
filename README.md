@@ -18,7 +18,7 @@ Gecko stores its configuration in `%APPDATA%\Local\Gecko\config.json`. You can c
 
 - `logLevel` - Logging verbosity: `debug`, `info`, `warning`, or `critical`.
 - `updateCheckInterval` - How often to check for updates in seconds.
-- `shouldLaunchAtStartup` - Whether Gecko should run on system boot.
+- `shouldLaunchAtStartup` - Whether Gecko should run when the current user signs in. Applied on launch through the current user’s Windows Run registry key. Relaunch Gecko after changing this setting or moving the executable. Incomplete configuration files retain existing settings when missing fields are added.
 
 **Example Configuration:**
 ```json
