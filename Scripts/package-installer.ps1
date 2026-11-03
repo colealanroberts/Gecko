@@ -72,9 +72,8 @@ Get-ChildItem "$root/Dependencies" -Directory -Filter 'swift-*' | ForEach-Object
 $swiftVersion = (& swift --version | Select-Object -First 1)
 if ($swiftVersion -notmatch 'Swift version (\d+\.\d+(?:\.\d+)?)') { throw 'Cannot determine the Swift runtime version.' }
 $swiftTag = "swift-$($Matches[1])-RELEASE"
-foreach ($name in @('LICENSE.txt')) {
-    Invoke-WebRequest "https://raw.githubusercontent.com/swiftlang/swift/$swiftTag/$name" -OutFile "$licenses/Swift-$name"
-}
+Invoke-WebRequest "https://raw.githubusercontent.com/swiftlang/swift/$swiftTag/LICENSE.txt" -OutFile "$licenses/Swift-LICENSE.txt"
+Invoke-WebRequest "https://raw.githubusercontent.com/swiftlang/swift-foundation-icu/$swiftTag/LICENSE.md" -OutFile "$licenses/ICU-LICENSE.md"
 $downloads = @{
     'vc_redist.x64.exe' = 'https://aka.ms/vs/17/release/vc_redist.x64.exe'
     'WindowsAppRuntimeInstall-x64.exe' = 'https://aka.ms/windowsappsdk/1.7/1.7.250909003/windowsappruntimeinstall-x64.exe'
