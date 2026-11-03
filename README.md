@@ -10,7 +10,7 @@ A lightweight Windows desktop utility that automatically checks for Nvidia drive
 
 ## Installation
 
-Download the latest release from the [Releases](https://github.com/colealanroberts/Gecko/releases) page and run the executable. Gecko runs in the background and will notify you when new drivers are available.
+Download `GeckoSetup.exe` from the [Releases](https://github.com/colealanroberts/Gecko/releases) page and run it. The installer includes the required Swift DLLs and Microsoft runtime installers; Swift is not needed on the target machine. Installation requires administrator permission. Gecko runs in the background and will notify you when new drivers are available.
 
 ### Configuration
 
@@ -61,6 +61,18 @@ swift build -c release
 The setup script downloads pinned projection repositories and NuGet packages into the ignored `Dependencies/` directory and generates the notification bindings missing from upstream's checked-in snapshot. Re-running a completed setup is a no-op. If the setup script changes, use a fresh `Dependencies/` directory; it refuses to overwrite modified dependency checkouts.
 
 Keep the generated DLLs and resource directories beside the executable when distributing a build. The bootstrap DLL must also be beside `Gecko.exe` (copy it from `Dependencies/swift-windowsappsdk/Sources/CWinAppSDK/nuget/bin`).
+
+## Building the installer
+
+After a release build, install Inno Setup 6 and run:
+
+```powershell
+pwsh -File Scripts/package-installer.ps1 -Version 1.0.0
+```
+
+This creates `dist/GeckoSetup.exe` and its SHA-256 checksum. It bundles Gecko, its native DLL dependencies and resources, the Visual C++ redistributable, and Windows App Runtime 1.7. Packaging requires internet access to fetch prerequisites and Swift license notices; installation uses the bundled prerequisites offline. Microsoft prerequisite signatures are checked before packaging. The installer and app are currently unsigned.
+
+CI produces an installer artifact for pull requests and main. A `vMAJOR.MINOR.PATCH` tag (optionally with a prerelease suffix) builds and tests the installer, then attaches it to a draft GitHub Release for review. An existing release is updated without changing its publication status. The install/uninstall smoke test runs on a separate Windows runner without installing Swift; native GPU and notification behavior still need a desktop smoke test.
 
 ## License
 
