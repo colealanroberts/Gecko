@@ -1,4 +1,4 @@
-import FoundationEssentials
+import Foundation
 
 extension URL {
     /// The base directory for all Gecko-related files.

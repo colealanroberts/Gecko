@@ -1,4 +1,4 @@
-import FoundationEssentials
+import Foundation
 
 /// A structure that contains *all* GPU names and identifiers for desktop and notebooks.
 struct GPUContainerResponse: Decodable {

@@ -1,4 +1,4 @@
-import FoundationEssentials
+import Foundation
 import WinAppSDK
 import WinSDK
 
@@ -15,6 +15,7 @@ public final class GeckoApp {
         let configurationProvider = ConfigurationProvider()
         let config = configurationProvider.load()
         let logger = Logger(logLevel: config.logLevel)
+        StartupProvider(logger: logger).configure(enabled: config.shouldLaunchAtStartup)
 
         let notificationPresenter = NotificationPresenter(
             logger: logger
@@ -51,6 +52,7 @@ public final class GeckoApp {
         )
 
         self.viewModel = GeckoApp.ViewModel(
+            updateCheckInterval: config.updateCheckInterval,
             httpClient: httpClient,
             updateService: updateService,
             notificationPresenter: notificationPresenter,
@@ -77,6 +79,8 @@ extension GeckoApp {
 
         // MARK: - Private Properties
 
+        private let updateCheckInterval: Int
+        private var updateTask: Task<Void, Never>?
         private let httpClient: HTTPClient
         private let updateService: any UpdateServicing
         private let notificationPresenter: any NotificationPresenting
@@ -86,12 +90,14 @@ extension GeckoApp {
         // MARK: - Init
 
         init(
+            updateCheckInterval: Int,
             httpClient: HTTPClient,
             updateService: any UpdateServicing,
             notificationPresenter: any NotificationPresenting,
             router: ApplicationRouting,
             logger: Logging
         ) {
+            self.updateCheckInterval = updateCheckInterval
             self.httpClient = httpClient
             self.updateService = updateService
             self.notificationPresenter = notificationPresenter
@@ -102,14 +108,31 @@ extension GeckoApp {
         // MARK: - Public Methods
 
         func prepare() {
-            Task {
-                do {
-                    if let download = try await updateService.fetch() {
-                        presentUpdateNotification(for: download)
+            guard updateTask == nil else { return }
+            updateTask = Task { [weak self] in
+                while !Task.isCancelled {
+                    guard let interval = self?.updateCheckInterval else { return }
+                    await self?.checkForUpdate()
+                    do {
+                        try await Task.sleep(nanoseconds: UInt64(interval) * 1_000_000_000)
+                    } catch {
+                        return
                     }
-                } catch {
-                    logger.warning(error.localizedDescription)
                 }
+            }
+        }
+
+        deinit {
+            updateTask?.cancel()
+        }
+
+        private func checkForUpdate() async {
+            do {
+                if let download = try await updateService.fetch() {
+                    presentUpdateNotification(for: download)
+                }
+            } catch {
+                logger.warning(error.localizedDescription)
             }
         }
 
@@ -216,6 +239,7 @@ extension GeckoApp {
                         )
                     }    
                 } catch {
+                    notificationPresenter.dismiss(id: notification.id)
                     logger.warning(error.localizedDescription)
                 }
             }

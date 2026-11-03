@@ -1,4 +1,4 @@
-import FoundationEssentials
+import Foundation
 
 /// Allows user-configurable properties Gecko. 
 /// - Note: If necessary, a `config.json` file is written to disk with the 

@@ -15,7 +15,7 @@ extension UI {
         // MARK: - Private Properties
 
         private let title: String
-        private var currentProgress: Double = 0.0
+        private var lastBytesWritten: Int64 = -1
         private var lastSequence: UInt32 = 0
 
         // MARK: - Init
@@ -70,26 +70,27 @@ extension UI {
         func update(
             snapshot: DownloadSnapshot
         ) -> AppNotificationProgressData? {
-            let sequence = UInt32(snapshot.progress * 100.0)
-            
-            guard sequence != lastSequence else {
+            guard snapshot.bytesWritten != lastBytesWritten else {
                 return nil
             }
 
-            lastSequence = sequence
+            lastBytesWritten = snapshot.bytesWritten
+            lastSequence += 1
 
-            let data = AppNotificationProgressData(sequence)
+            let data = AppNotificationProgressData(lastSequence)
                 data.title = title
                 data.value = snapshot.progress
 
                 if let percentage = snapshot.percentage {
                     data.valueStringOverride = "\(percentage)%"
+                } else {
+                    data.valueStringOverride = "Downloading"
                 }
 
                 let written = ByteCountFormatter.string(fromByteCount: snapshot.bytesWritten, countStyle: .file)
                 let total = ByteCountFormatter.string(fromByteCount: snapshot.totalBytes, countStyle: .file)
                 
-                data.status = "\(written)/\(total)"
+                data.status = snapshot.totalBytes > 0 ? "\(written)/\(total)" : written
             return data
         }
     }

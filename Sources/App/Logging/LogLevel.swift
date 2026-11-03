@@ -1,4 +1,4 @@
-import FoundationEssentials
+import Foundation
 
 /// Describes the different log levels that the logger accepts.
 enum LogLevel: Int, Codable, CaseIterable {
