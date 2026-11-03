@@ -7,8 +7,18 @@ $destination = Join-Path $env:TEMP 'Gecko Installer Smoke Test'
 $arguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=`"$destination`"", "/LOG=`"$env:TEMP/Gecko-install.log`"")
 # Reinstall as well, exercising prerequisite detection and upgrade behavior.
 foreach ($attempt in 1..2) {
-    $setup = Start-Process $Installer -ArgumentList $arguments -Wait -PassThru
-    if ($setup.ExitCode -ne 0) { throw "Installer returned $($setup.ExitCode). See $env:TEMP/Gecko-install.log" }
+    Write-Host "Install attempt $attempt"
+    # -Wait follows the whole process tree, including runtime background brokers.
+    # The setup process itself waits for prerequisites and reports their failures.
+    $setup = Start-Process $Installer -ArgumentList $arguments -PassThru
+    if (-not $setup.WaitForExit(120000)) {
+        if (Test-Path "$env:TEMP/Gecko-install.log") { Get-Content "$env:TEMP/Gecko-install.log" -Tail 60 }
+        throw 'Setup did not finish within two minutes.'
+    }
+    if ($setup.ExitCode -ne 0) {
+        if (Test-Path "$env:TEMP/Gecko-install.log") { Get-Content "$env:TEMP/Gecko-install.log" -Tail 60 }
+        throw "Installer returned $($setup.ExitCode). See $env:TEMP/Gecko-install.log"
+    }
 }
 try {
     if (-not (Test-Path "$destination/Gecko.exe")) { throw 'The installed executable is missing.' }
@@ -37,6 +47,7 @@ public static class InstallerLoader {
         if ($LASTEXITCODE -ne 0) { throw "Runtime fixture failed: $LASTEXITCODE" }
     }
 } finally {
-    $uninstaller = Start-Process "$destination/unins000.exe" -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
+    $uninstaller = Start-Process "$destination/unins000.exe" -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -PassThru
+    if (-not $uninstaller.WaitForExit(60000)) { throw 'Uninstall timed out.' }
     if ($uninstaller.ExitCode -ne 0) { throw "Uninstall failed: $($uninstaller.ExitCode)" }
 }

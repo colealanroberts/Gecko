@@ -10,6 +10,7 @@ permissions:
 jobs:
   packaging-check:
     runs-on: windows-2022
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: compnerd/gha-setup-swift@v0.5.1
@@ -28,11 +29,13 @@ jobs:
           '@ | Set-Content fixture/main.swift
           swiftc -O fixture/main.swift -o fixture/Gecko.exe
           if ($LASTEXITCODE -ne 0) { throw 'Fixture build failed' }
-      - name: Exercise packaging independently of the full projection build
+      - name: Package the runtime fixture
         shell: pwsh
-        run: |
-          ./Scripts/package-installer.ps1 -Version 0.0.0-test -BuildDirectory "$PWD/fixture"
-          ./Scripts/test-installer.ps1 -Installer "$PWD/dist/GeckoSetup.exe" -LaunchFixture
+        run: ./Scripts/package-installer.ps1 -Version 0.0.0-test -BuildDirectory "$PWD/fixture"
+      - name: Install, reinstall, run, and uninstall the fixture
+        timeout-minutes: 5
+        shell: pwsh
+        run: ./Scripts/test-installer.ps1 -Installer "$PWD/dist/GeckoSetup.exe" -LaunchFixture
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -63,6 +66,7 @@ jobs:
             dist/GeckoSetup.exe.sha256
           if-no-files-found: error
   installer-smoke-test:
+    timeout-minutes: 10
     needs: windows-build
     runs-on: windows-2022
     steps:
